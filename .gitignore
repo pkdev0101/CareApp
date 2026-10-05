@@ -1,0 +1,41 @@
+# Markdown files (documentation)
+*.md
+
+# Build outputs
+build/
+.gradle/
+*.apk
+*.dex
+
+# Local properties
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+*.ap_
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin compiled
+*.class
+*.jar
+*.war
+
+# Test coverage
+coverage/
+
+# Gradle
+gradle.properties
+.gradle/
+.gradle-user/
+
+# Local development assistant state
+.claude/

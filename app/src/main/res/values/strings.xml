@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">CareApp</string>
+
+    <!-- Main Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_medication">Medicine</string>
+    <string name="nav_family">Family</string>
+    <string name="nav_emergency">Emergency</string>
+    <string name="nav_lost">Lost</string>
+
+    <!-- Home Screen -->
+    <string name="home_greeting">Good morning</string>
+    <string name="home_today">Today is</string>
+    <string name="home_location">You are at</string>
+    <string name="home_next_task">Next task</string>
+    <string name="home_next_visitor">Next visitor</string>
+    <string name="home_emergency_contact">Emergency contact</string>
+
+    <!-- Buttons -->
+    <string name="btn_my_medicine">My Medicine</string>
+    <string name="btn_my_family">My Family</string>
+    <string name="btn_confused">I Feel Confused</string>
+    <string name="btn_emergency">Emergency Help</string>
+    <string name="btn_where_am_i">Where Am I</string>
+    <string name="btn_took_it">I Took It</string>
+    <string name="btn_remind_later">Remind Later</string>
+    <string name="btn_need_help">Need Help</string>
+
+    <!-- Emergency Screen -->
+    <string name="emergency_title">Emergency Help</string>
+    <string name="emergency_question">Are you safe</string>
+    <string name="emergency_card">My Emergency Card</string>
+    <string name="emergency_lost">I Am Lost</string>
+    <string name="emergency_fell">I Fell / Need Help</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_high_contrast">High Contrast Mode</string>
+    <string name="accessibility_large_text">Large Text</string>
+    <string name="accessibility_simple">Simple Mode</string>
+
+    <!-- Memory Card -->
+    <string name="memory_this_is">This is</string>
+    <string name="memory_she_is">She is your</string>
+    <string name="memory_helps_with">She helps with</string>
+
+    <!-- Disclaimer -->
+    <string name="medical_disclaimer">This app does not diagnose or treat medical conditions. In emergencies, call 911.</string>
+</resources>

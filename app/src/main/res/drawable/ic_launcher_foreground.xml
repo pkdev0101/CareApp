@@ -1,0 +1,48 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle for contrast -->
+    <path
+        android:pathData="M54,20C35.12,20 20,35.12 20,54C20,72.88 35.12,88 54,88C72.88,88 88,72.88 88,54C88,35.12 72.88,20 54,20Z"
+        android:fillColor="#E0F2F1" />
+
+    <!-- Hand outline - palm -->
+    <path
+        android:pathData="M32,50C32,50 32,38 40,38C45,38 48,42 48,48L48,68C48,72 45,75 40,75C35,75 32,72 32,68Z"
+        android:fillColor="#4A6B7C"
+        android:strokeColor="#4A6B7C"
+        android:strokeWidth="1" />
+
+    <!-- Hand outline - thumb -->
+    <path
+        android:pathData="M32,50C32,50 25,48 22,52C20,55 22,60 28,58C32,57 32,54 32,50Z"
+        android:fillColor="#4A6B7C"
+        android:strokeColor="#4A6B7C"
+        android:strokeWidth="1" />
+
+    <!-- Hand outline - fingers -->
+    <path
+        android:pathData="M48,48L60,38C62,37 64,38 64,40L64,52C64,54 62,55 60,54L48,48Z"
+        android:fillColor="#4A6B7C" />
+
+    <path
+        android:pathData="M48,56L62,46C64,45 66,46 66,48L66,60C66,62 64,63 62,62L48,56Z"
+        android:fillColor="#4A6B7C" />
+
+    <path
+        android:pathData="M48,64L62,56C64,55 66,56 66,58L66,70C66,72 64,73 62,72L48,64Z"
+        android:fillColor="#4A6B7C" />
+
+    <!-- Heart on hand palm -->
+    <path
+        android:pathData="M40,58C40,58 36,55 34,57C32,59 33,63 37,65C41,67 44,65 44,62Z"
+        android:fillColor="#E8A98A" />
+
+    <!-- Heart accent - second color -->
+    <path
+        android:pathData="M40,56C40,57 39,57 38,56C37,55 37,53 39,52C40,51 42,52 42,54C42,55.5 41,56 40,56Z"
+        android:fillColor="#D64545" />
+</vector>

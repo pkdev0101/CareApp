@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CareAnchor Senior-Accessible Theme -->
+<resources>
+    <!-- Main Theme - Light background with high contrast -->
+    <style name="Theme.CareApp" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Window properties -->
+        <item name="android:windowBackground">@color/background_light</item>
+        <item name="android:textColorPrimary">@color/text_dark</item>
+        <item name="android:textColorSecondary">@color/text_gray</item>
+
+        <!-- Status bar styling - dark for contrast -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/primary_green_dark</item>
+    </style>
+
+    <!-- Accessibility theme variant -->
+    <style name="Theme.CareApp.HighContrast" parent="Theme.CareApp">
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+</resources>
