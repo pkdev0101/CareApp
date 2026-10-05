@@ -1,5 +1,6 @@
 package com.careapp.app.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.careapp.app.data.repository.CareRepository
@@ -8,6 +9,12 @@ class MedicationViewModelFactory(private val repository: CareRepository) : ViewM
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return MedicationViewModel(repository) as T
+    }
+}
+
+class MedicationHistoryViewModelFactory(private val repository: CareRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return MedicationHistoryViewModel(repository) as T
     }
 }
 
@@ -55,5 +62,11 @@ class ThemeViewModelFactory : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return ThemeViewModel() as T
+    }
+}
+
+class CareModeViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return CareModeViewModel(context) as T
     }
 }

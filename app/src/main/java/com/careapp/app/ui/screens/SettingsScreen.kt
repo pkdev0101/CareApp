@@ -11,11 +11,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.AccessibilityViewModel
 
 @Composable
-fun SettingsScreen(viewModel: AccessibilityViewModel? = null) {
+fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: NavController? = null, isCaregiverMode: Boolean = false) {
     val textSizeScale by (viewModel?.textSizeScale?.collectAsState() ?: remember { mutableStateOf(1f) })
     val highContrastEnabled by (viewModel?.highContrastEnabled?.collectAsState() ?: remember { mutableStateOf(false) })
 
@@ -34,6 +35,14 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null) {
                 color = PrimaryTeal,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
+        }
+
+        if (isCaregiverMode) {
+            item {
+                Button(onClick = { navController?.navigate(com.careapp.app.ui.CareAppScreen.DemoMode.name) }, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = ButtonDefaults.buttonColors(containerColor = SecondaryCoral)) {
+                    Text("Start Demo Mode")
+                }
+            }
         }
 
         // Text Size Setting

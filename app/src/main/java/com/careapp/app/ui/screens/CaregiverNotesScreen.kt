@@ -8,11 +8,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.CaregiverNotesViewModel
+import com.careapp.app.util.PdfExportManager
 
 @Composable
 fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
+    val context = LocalContext.current
     val note by (viewModel?.noteContent?.collectAsState() ?: remember { mutableStateOf("") })
     val mood by (viewModel?.mood?.collectAsState() ?: remember { mutableStateOf("Calm") })
     val sleep by (viewModel?.sleepQuality?.collectAsState() ?: remember { mutableStateOf("Good") })
@@ -34,6 +37,16 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
         item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("Good", "Okay", "Poor").forEach { value -> FilterChip(selected = sleep == value, onClick = { viewModel?.setSleepQuality(value) }, label = { Text(value) }) } } }
         item { Button(onClick = { viewModel?.saveNote() }, modifier = Modifier.fillMaxWidth()) { Text("Save Handoff Note") } }
         item { OutlinedButton(onClick = { viewModel?.generateHandoffSummary() }, modifier = Modifier.fillMaxWidth()) { Text("Generate Handoff Summary") } }
+        item {
+            OutlinedButton(
+                onClick = {
+                    val handoff = "Notes: $note\nMood: $mood\nSleep: $sleep\nSummary: $summary"
+                    val file = PdfExportManager.createTextPdf(context, "careapp-caregiver-handoff.pdf", "CareApp Caregiver Handoff", handoff)
+                    PdfExportManager.sharePdf(context, file, "Share Caregiver Handoff PDF")
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Export Handoff PDF") }
+        }
         if (summary.isNotBlank()) item { Card { Text(summary, modifier = Modifier.padding(16.dp), fontSize = 17.sp) } }
     }
     if (showDialog) AlertDialog(onDismissRequest = { viewModel?.dismissDialog() }, title = { Text("Saved") }, text = { Text(dialogMessage) }, confirmButton = { Button(onClick = { viewModel?.dismissDialog() }) { Text("OK") } })

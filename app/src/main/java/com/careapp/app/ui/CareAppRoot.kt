@@ -1,8 +1,13 @@
 package com.careapp.app.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,7 +34,7 @@ import com.careapp.app.ui.theme.CareAppTheme
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.*
 
-enum class CareAnchorScreen {
+enum class CareAppScreen {
     Home,
     Medication,
     Family,
@@ -37,21 +42,25 @@ enum class CareAnchorScreen {
     CaregiverNotes,
     Emergency,
     Lost,
+    Help,
     CalmMode,
     CareSnapshot,
     MedicationHistory,
     SafetyReadiness,
     Settings,
     DoctorSummary,
-    QRCode
+    QRCode,
+    DemoMode
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun CareAnchorApp() {
+fun CareAppRoot() {
     val context = LocalContext.current
     var isDarkMode by remember { mutableStateOf(false) }
-    var isCaregiverMode by remember { mutableStateOf(false) }
+    val modeViewModel: CareModeViewModel = viewModel(factory = CareModeViewModelFactory(context))
+    val careMode by modeViewModel.mode.collectAsState()
+    val isCaregiverMode = careMode == CareMode.CAREGIVER
 
     CareAppTheme(darkTheme = isDarkMode) {
         val navController = rememberNavController()
@@ -67,6 +76,7 @@ fun CareAnchorApp() {
         val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory())
         val accessibilityViewModel: AccessibilityViewModel = viewModel()
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
                     title = {
@@ -77,15 +87,16 @@ fun CareAnchorApp() {
                         )
                     },
                     actions = {
-                        Button(
-                            onClick = { isCaregiverMode = !isCaregiverMode },
-                            modifier = Modifier.padding(horizontal = 4.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = if (isCaregiverMode) SecondaryCoral else Color(0xFFE0E0E0)),
-                            contentPadding = PaddingValues(4.dp)
+                        TextButton(
+                            onClick = {
+                                val wasCaregiver = isCaregiverMode
+                                modeViewModel.toggleMode()
+                            },
+                            modifier = Modifier.padding(horizontal = 2.dp)
                         ) {
-                            Text(if (isCaregiverMode) "👩‍⚕️" else "👴", fontSize = 16.sp)
+                            Text(if (isCaregiverMode) "Senior Mode" else "Caregiver Mode", fontSize = 12.sp)
                         }
-                        Button(
+                        if (isCaregiverMode) Button(
                             onClick = { isDarkMode = !isDarkMode },
                             modifier = Modifier.padding(horizontal = 4.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = if (isDarkMode) Color.Gray else Color.White),
@@ -103,57 +114,70 @@ fun CareAnchorApp() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = CareAnchorScreen.Home.name,
-                modifier = Modifier.padding(innerPadding)
+                startDestination = CareAppScreen.Home.name,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .background(MaterialTheme.colorScheme.background)
             ) {
-                composable(CareAnchorScreen.Home.name) {
+                composable(CareAppScreen.Home.name) {
                     HomeScreen(navController, dashboardViewModel)
                 }
-                composable(CareAnchorScreen.Medication.name) {
-                    MedicationScreen(viewModel = medViewModel)
+                composable(CareAppScreen.Medication.name) {
+                    MedicationScreen(viewModel = medViewModel, navController = navController)
                 }
-                composable(CareAnchorScreen.Family.name) {
+                composable(CareAppScreen.Family.name) {
                     MemoryCardsScreen(viewModel = memoryViewModel)
                 }
-                composable(CareAnchorScreen.Routine.name) {
+                composable(CareAppScreen.Routine.name) {
                     RoutineScreen(viewModel = routineViewModel)
                 }
-                composable(CareAnchorScreen.CaregiverNotes.name) {
+                composable(CareAppScreen.CaregiverNotes.name) {
                     CaregiverNotesScreen(viewModel = caregiverViewModel)
                 }
-                composable(CareAnchorScreen.Emergency.name) {
+                composable(CareAppScreen.Emergency.name) {
                     EmergencyScreen(viewModel = emergencyViewModel, navController = navController)
                 }
-                composable(CareAnchorScreen.Lost.name) {
+                composable(CareAppScreen.Lost.name) {
                     LostModeScreen(viewModel = locationViewModel, navController = navController)
                 }
-                composable(CareAnchorScreen.CalmMode.name) {
+                composable(CareAppScreen.Help.name) {
+                    HelpScreen(navController = navController, emergencyViewModel = emergencyViewModel)
+                }
+                composable(CareAppScreen.CalmMode.name) {
                     CalmModeScreen(navController = navController, viewModel = memoryViewModel)
                 }
-                composable(CareAnchorScreen.CareSnapshot.name) {
-                    CareSnapshotScreen()
+                composable(CareAppScreen.CareSnapshot.name) {
+                    CareSnapshotScreen(navController)
                 }
-                composable(CareAnchorScreen.MedicationHistory.name) {
-                    MedicationHistoryScreen(viewModel = medViewModel)
+                composable(CareAppScreen.MedicationHistory.name) {
+                    MedicationHistoryScreen(viewModel = viewModel(factory = MedicationHistoryViewModelFactory(repository)))
                 }
-                composable(CareAnchorScreen.SafetyReadiness.name) {
+                composable(CareAppScreen.SafetyReadiness.name) {
                     SafetyReadinessScreen()
                 }
-                composable(CareAnchorScreen.Settings.name) {
-                    SettingsScreen(viewModel = accessibilityViewModel)
+                composable(CareAppScreen.Settings.name) {
+                    SettingsScreen(viewModel = accessibilityViewModel, navController = navController, isCaregiverMode = isCaregiverMode)
                 }
-                composable(CareAnchorScreen.DoctorSummary.name) {
-                    DoctorSummaryScreen()
+                composable(CareAppScreen.DoctorSummary.name) {
+                    DoctorSummaryScreen(navController)
                 }
-                composable(CareAnchorScreen.QRCode.name) {
+                composable(CareAppScreen.QRCode.name) {
                     QRCodeScreen()
+                }
+                composable(CareAppScreen.DemoMode.name) {
+                    DemoModeScreen(navController)
                 }
             }
         }
     }
 }
 
-data class NavBarItem(val screen: CareAnchorScreen, val emoji: String, val label: String)
+data class NavBarItem(val screen: CareAppScreen, val emoji: String, val label: String)
 
 @Composable
 fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = false) {
@@ -166,21 +190,34 @@ fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = fa
             .height(100.dp),
         containerColor = PrimaryTeal
     ) {
-        val screens = if (isCaregiverMode) {
+        val legacyScreens = if (isCaregiverMode) {
             listOf(
-                NavBarItem(CareAnchorScreen.Routine, "📅", "Routine"),
-                NavBarItem(CareAnchorScreen.Medication, "💊", "Medicine"),
-                NavBarItem(CareAnchorScreen.CaregiverNotes, "📝", "Notes"),
-                NavBarItem(CareAnchorScreen.DoctorSummary, "📋", "Report"),
-                NavBarItem(CareAnchorScreen.Settings, "⚙️", "Settings")
+                NavBarItem(CareAppScreen.Routine, "📅", "Routine"),
+                NavBarItem(CareAppScreen.Medication, "💊", "Medicine"),
+                NavBarItem(CareAppScreen.CaregiverNotes, "📝", "Notes"),
+                NavBarItem(CareAppScreen.DoctorSummary, "📋", "Report"),
+                NavBarItem(CareAppScreen.Settings, "⚙️", "Settings")
             )
         } else {
             listOf(
-                NavBarItem(CareAnchorScreen.Home, "🏠", "Home"),
-                NavBarItem(CareAnchorScreen.Medication, "💊", "Medicine"),
-                NavBarItem(CareAnchorScreen.Family, "👨‍👩‍👧", "Family"),
-                NavBarItem(CareAnchorScreen.Emergency, "🆘", "Emergency"),
-                NavBarItem(CareAnchorScreen.Lost, "📍", "Lost")
+                NavBarItem(CareAppScreen.Home, "🏠", "Home"),
+                NavBarItem(CareAppScreen.Medication, "💊", "Medicine"),
+                NavBarItem(CareAppScreen.Family, "👨‍👩‍👧", "People"),
+                NavBarItem(CareAppScreen.CalmMode, "🫶", "I Forgot"),
+                NavBarItem(CareAppScreen.Emergency, "🆘", "Emergency"),
+                NavBarItem(CareAppScreen.Lost, "📍", "Lost")
+            )
+        }
+
+        val screens = if (isCaregiverMode) {
+            legacyScreens
+        } else {
+            listOf(
+                NavBarItem(CareAppScreen.Home, "⌂", "Home"),
+                NavBarItem(CareAppScreen.Medication, "M", "Medicine"),
+                NavBarItem(CareAppScreen.Family, "P", "People"),
+                NavBarItem(CareAppScreen.CalmMode, "?", "I Forgot"),
+                NavBarItem(CareAppScreen.Help, "!", "Help")
             )
         }
 

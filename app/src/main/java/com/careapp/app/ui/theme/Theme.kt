@@ -13,10 +13,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 // ═══════════════════════════════════════════════════════════════
-// CAREANCHOR LIGHT THEME - Senior-Optimized (Teal/Coral)
+// CAREAPP LIGHT THEME - Senior-Optimized (Teal/Coral)
 // High contrast, large text, accessible design
 // ═══════════════════════════════════════════════════════════════
-private val CareAnchorLightColorScheme = lightColorScheme(
+private val CareAppLightColorScheme = lightColorScheme(
     primary = PrimaryTeal,            // Deep teal for main actions
     onPrimary = White,                // White text on teal
     primaryContainer = PrimaryTealLight, // Bright teal for emphasis
@@ -47,9 +47,9 @@ private val CareAnchorLightColorScheme = lightColorScheme(
 )
 
 // ═══════════════════════════════════════════════════════════════
-// CAREANCHOR DARK THEME - Optional high contrast mode (Teal/Coral)
+// CAREAPP DARK THEME - Optional high contrast mode (Teal/Coral)
 // ═══════════════════════════════════════════════════════════════
-private val CareAnchorDarkColorScheme = darkColorScheme(
+private val CareAppDarkColorScheme = darkColorScheme(
     primary = PrimaryTealLight,       // Bright teal on dark
     onPrimary = Black,                // Black text on bright teal
     primaryContainer = PrimaryTeal,   // Deep teal container
@@ -86,8 +86,8 @@ fun CareAppTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        darkTheme -> CareAnchorDarkColorScheme
-        else -> CareAnchorLightColorScheme
+        darkTheme -> CareAppDarkColorScheme
+        else -> CareAppLightColorScheme
     }
 
     MaterialTheme(

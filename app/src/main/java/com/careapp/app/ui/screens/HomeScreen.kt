@@ -3,7 +3,11 @@ package com.careapp.app.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -14,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
-import com.careapp.app.ui.CareAnchorScreen
+import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.components.LargeButton
 import com.careapp.app.ui.components.AdherenceWidget
 import com.careapp.app.ui.theme.*
@@ -40,8 +44,9 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
-            .padding(16.dp),
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
@@ -55,6 +60,54 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
+
+        item {
+            LargeButton(
+                text = "I Forgot",
+                onClick = { navController?.navigate(CareAppScreen.CalmMode.name) },
+                backgroundColor = SupportPlum
+            )
+        }
+
+        item { Spacer(modifier = Modifier.height(12.dp)) }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    Text(
+                        text = "Next Step",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryTeal
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = nextTask,
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.DarkGray
+                    )
+                    Text(
+                        text = "Due at ${nextMedication?.scheduledTime ?: "today"}",
+                        fontSize = 16.sp,
+                        color = Color.DarkGray,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    OutlinedButton(
+                        onClick = { navController?.navigate(CareAppScreen.Medication.name) },
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
+                    ) {
+                        Text("Open Medicine", fontSize = 17.sp)
+                    }
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(12.dp)) }
 
         // Orientation Information
         item {
@@ -98,39 +151,39 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
         item {
             LargeButton(
                 text = "My Medicine",
-                onClick = { navController?.navigate(CareAnchorScreen.Medication.name) },
+                onClick = { navController?.navigate(CareAppScreen.Medication.name) },
                 backgroundColor = PrimaryTealLight
             )
         }
 
         item {
             LargeButton(
-                text = "My Family",
-                onClick = { navController?.navigate(CareAnchorScreen.Family.name) },
+                text = "People",
+                onClick = { navController?.navigate(CareAppScreen.Family.name) },
                 backgroundColor = SecondaryCoral
             )
         }
 
         item {
             LargeButton(
-                text = "I Feel Confused",
-                onClick = { navController?.navigate(CareAnchorScreen.CalmMode.name) },
-                backgroundColor = SupportPlum
+                text = "Quick Help",
+                onClick = { navController?.navigate(CareAppScreen.Help.name) },
+                backgroundColor = SupportPlumLight
             )
         }
 
         item {
             LargeButton(
                 text = "Emergency Help",
-                onClick = { navController?.navigate(CareAnchorScreen.Emergency.name) },
+                onClick = { navController?.navigate(CareAppScreen.Help.name) },
                 backgroundColor = DangerRed
             )
         }
 
         item {
             LargeButton(
-                text = "Where Am I?",
-                onClick = { navController?.navigate(CareAnchorScreen.Lost.name) },
+                text = "I Am Lost",
+                onClick = { navController?.navigate(CareAppScreen.Help.name) },
                 backgroundColor = SupportPlumLight
             )
         }

@@ -8,19 +8,23 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.components.MedicationCard
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.MedicationViewModel
+import com.careapp.app.util.PdfExportManager
 
 @Composable
-fun MedicationScreen(viewModel: MedicationViewModel? = null) {
+fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavController? = null) {
     // Use ViewModel if available, otherwise fall back to SampleData
     val medications by (viewModel?.medications?.collectAsState() ?: remember { mutableStateOf(SampleData.medications) })
     val showDialog by (viewModel?.showDialog?.collectAsState() ?: remember { mutableStateOf(false) })
@@ -28,12 +32,15 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null) {
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
     val showDuplicateWarning by (viewModel?.showDuplicateWarning?.collectAsState() ?: remember { mutableStateOf(false) })
     val duplicateWarningTime by (viewModel?.duplicateWarningTime?.collectAsState() ?: remember { mutableStateOf("") })
+    val overdueMedications by (viewModel?.overdueMedications?.collectAsState() ?: remember { mutableStateOf(emptyList()) })
+    val context = LocalContext.current
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
+        contentPadding = PaddingValues(bottom = 112.dp),
         verticalArrangement = Arrangement.Top
     ) {
         item {
@@ -44,6 +51,12 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null) {
                 color = PrimaryTeal,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
+        }
+
+        if (overdueMedications.isNotEmpty()) {
+            item {
+                AlertCard("Medication overdue: ${overdueMedications.first().name} was due at ${overdueMedications.first().scheduledTime}.\nNeeds caregiver review.")
+            }
         }
 
         item {
@@ -69,6 +82,24 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null) {
                     viewModel?.needHelp(medication.id, medication)
                 }
             )
+        }
+
+        item {
+            androidx.compose.material3.OutlinedButton(
+                onClick = { navController?.navigate(com.careapp.app.ui.CareAppScreen.MedicationHistory.name) },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            ) { Text("View History", fontSize = 17.sp) }
+        }
+
+        item {
+            androidx.compose.material3.OutlinedButton(
+                onClick = {
+                    val text = medications.joinToString("\n") { "${it.name} ${it.dose} — ${it.scheduledTime} — ${it.instructions}" }
+                    val file = PdfExportManager.createTextPdf(context, "careapp-medication-list.pdf", "CareApp Medication List", text)
+                    PdfExportManager.sharePdf(context, file, "Share Medication List PDF")
+                },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            ) { Text("Export Medication List PDF", fontSize = 16.sp) }
         }
 
         item { Spacer(modifier = Modifier.height(20.dp)) }
@@ -112,5 +143,15 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null) {
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun AlertCard(text: String) {
+    androidx.compose.material3.Card(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+    ) {
+        Text(text, modifier = Modifier.padding(16.dp), color = Color(0xFF8A3B00), fontWeight = FontWeight.Bold)
     }
 }

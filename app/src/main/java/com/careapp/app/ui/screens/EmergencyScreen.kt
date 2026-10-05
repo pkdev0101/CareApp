@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
-import com.careapp.app.ui.CareAnchorScreen
+import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.components.LargeButton
 import com.careapp.app.ui.theme.*
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +37,7 @@ fun EmergencyScreen(viewModel: com.careapp.app.viewmodel.EmergencyViewModel? = n
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
     val showCountdown by (viewModel?.showCountdown?.collectAsState() ?: remember { mutableStateOf(false) })
     val countdown by (viewModel?.countdownValue?.collectAsState() ?: remember { mutableStateOf(0) })
+    val timeline by (viewModel?.emergencyTimeline?.collectAsState() ?: remember { mutableStateOf(emptyList()) })
 
     LaunchedEffect(showCountdown) {
         while (showCountdown) {
@@ -76,6 +78,7 @@ fun EmergencyScreen(viewModel: com.careapp.app.viewmodel.EmergencyViewModel? = n
             LargeButton(
                 text = "Call Caregiver\n${senior.primaryCaregiverName}",
                 onClick = {
+                    viewModel?.callCaregiver()
                     // Open phone dialer with caregiver number (no permission needed, never dials)
                     try {
                         val intent = Intent(Intent.ACTION_DIAL).apply {
@@ -109,7 +112,7 @@ fun EmergencyScreen(viewModel: com.careapp.app.viewmodel.EmergencyViewModel? = n
         item {
             LargeButton(
                 text = "I Am Lost",
-                onClick = { navController?.navigate(CareAnchorScreen.Lost.name) },
+                onClick = { viewModel?.locationViewed(); navController?.navigate(CareAppScreen.Lost.name) },
                 backgroundColor = SupportPlum
             )
         }
@@ -184,6 +187,25 @@ fun EmergencyScreen(viewModel: com.careapp.app.viewmodel.EmergencyViewModel? = n
                         EmergencyCardRow("Medications", "Donepezil, Metformin, Lisinopril")
                         EmergencyCardRow("Doctor", senior.doctorName)
                         EmergencyCardRow("Hospital", senior.preferredHospital)
+                    }
+                }
+            }
+        }
+
+        if (timeline.isNotEmpty()) {
+            item {
+                Text("Emergency Timeline", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = DangerRed, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
+            }
+            items(timeline) { entry ->
+                val indicator = when (entry.severity) { "Critical" -> DangerRed; "Warning" -> WarningAmber; else -> PrimaryTeal }
+                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                    Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                        androidx.compose.foundation.layout.Box(modifier = Modifier.size(12.dp).background(indicator, androidx.compose.foundation.shape.CircleShape))
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text("${entry.timestamp}  ${entry.title}", fontWeight = FontWeight.Bold, color = indicator)
+                            Text(entry.description, fontSize = 14.sp, color = Color.DarkGray)
+                        }
                     }
                 }
             }

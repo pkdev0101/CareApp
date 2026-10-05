@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- CareAnchor Senior-Accessible Theme -->
+<!-- CareApp Senior-Accessible Theme -->
 <resources>
     <!-- Main Theme - Light background with high contrast -->
     <style name="Theme.CareApp" parent="android:Theme.Material.Light.NoActionBar">

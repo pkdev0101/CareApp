@@ -25,16 +25,10 @@ import com.careapp.app.util.QRCodeGenerator
 fun QRCodeScreen() {
     val context = LocalContext.current
     val senior = SampleData.seniorProfile
+    var privacyLevel by remember { mutableStateOf("basic") }
 
     // Generate QR code data
-    val qrData = """
-        EMERGENCY INFO
-        Name: ${senior.fullName}
-        Caregiver: ${senior.primaryCaregiverName}
-        Phone: ${senior.primaryCaregiverPhone}
-        Address: ${senior.address}
-        Allergies: ${senior.allergies}
-    """.trimIndent()
+    val qrData = QRCodeGenerator.formatQRContent(senior, privacyLevel)
 
     var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
@@ -91,6 +85,13 @@ fun QRCodeScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Privacy level", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 8.dp)) {
+                FilterChip(selected = privacyLevel == "basic", onClick = { privacyLevel = "basic" }, label = { Text("Basic") })
+                FilterChip(selected = privacyLevel == "full", onClick = { privacyLevel = "full" }, label = { Text("Full") })
+            }
+            Text("Scan this to view emergency care information.", fontSize = 14.sp, color = TextGray)
 
             // QR Code Display
             Card(
@@ -160,13 +161,13 @@ fun QRCodeScreen() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { /* Print */ },
+                onClick = { shareQRCode() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryTealLight)
             ) {
-                Text("🖨️ Print for Wallet", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("🖨️ Share for Wallet", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(20.dp))

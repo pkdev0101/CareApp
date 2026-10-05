@@ -15,11 +15,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.theme.*
+import com.careapp.app.util.PdfExportManager
 
 @Composable
-fun CareSnapshotScreen() {
+fun CareSnapshotScreen(navController: NavController? = null) {
     val context = LocalContext.current
     var showFullView by remember { mutableStateOf(false) }
     val senior = SampleData.seniorProfile
@@ -130,6 +132,8 @@ fun CareSnapshotScreen() {
             title = "📋 Care Instructions",
             items = listOf(
                 "Approach" to senior.calmingInstructions,
+                "What helps" to "Use family photos, reassurance, and slow breathing",
+                "What to avoid" to "Rushing, arguing, or giving too many instructions",
                 "Communication" to "Speak slowly and use simple words"
             )
         )
@@ -162,6 +166,30 @@ fun CareSnapshotScreen() {
         ) {
             Text("Share Snapshot", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = {
+                val snapshotText = "${senior.fullName}\n${senior.memoryNote}\nCaregiver: ${senior.primaryCaregiverName} ${senior.primaryCaregiverPhone}\nAllergies: ${senior.allergies}\nConditions: ${senior.medicalConditions}\nMedications: ${medications.joinToString { it.name }}"
+                val file = PdfExportManager.createTextPdf(context, "careapp-care-snapshot.pdf", "CareApp Care Snapshot", snapshotText)
+                PdfExportManager.sharePdf(context, file, "Share Care Snapshot PDF")
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Export as PDF") }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedButton(
+            onClick = { navController?.navigate(com.careapp.app.ui.CareAppScreen.QRCode.name) },
+            modifier = Modifier.fillMaxWidth()
+        ) { Text("Show QR Code") }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            "This profile is for communication and emergency organization only.",
+            fontSize = 13.sp,
+            color = Color(0xFF6D4C41),
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
     }

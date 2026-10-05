@@ -3,6 +3,7 @@ package com.careapp.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.careapp.app.data.repository.CareRepository
+import com.careapp.app.data.EmergencyTimelineEntry
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -27,8 +28,8 @@ class EmergencyViewModel(private val repository: CareRepository) : ViewModel() {
     val dialogTitle: StateFlow<String> = _dialogTitle.asStateFlow()
 
     // Emergency timeline
-    private val _emergencyTimeline = MutableStateFlow<List<String>>(emptyList())
-    val emergencyTimeline: StateFlow<List<String>> = _emergencyTimeline.asStateFlow()
+    private val _emergencyTimeline = MutableStateFlow<List<EmergencyTimelineEntry>>(emptyList())
+    val emergencyTimeline: StateFlow<List<EmergencyTimelineEntry>> = _emergencyTimeline.asStateFlow()
 
     // Countdown state for "I Fell" feature
     private val _countdownValue = MutableStateFlow(15)
@@ -118,6 +119,10 @@ class EmergencyViewModel(private val repository: CareRepository) : ViewModel() {
         }
     }
 
+    fun locationViewed() {
+        addTimelineEntry("Location viewed", "The user opened the lost-mode location screen.", "Info")
+    }
+
     fun hideEmergencyCard() {
         _showEmergencyCard.value = false
     }
@@ -148,6 +153,7 @@ class EmergencyViewModel(private val repository: CareRepository) : ViewModel() {
     }
 
     fun cancelHelp() {
+        addTimelineEntry("Alert cancelled", "The help countdown was cancelled by the user.", "Info")
         _showCountdown.value = false
         _countdownValue.value = 15
 
@@ -183,14 +189,14 @@ class EmergencyViewModel(private val repository: CareRepository) : ViewModel() {
     }
 
     // ========== EMERGENCY TIMELINE ==========
-    private suspend fun addTimelineEntry(entry: String) {
-        val currentList = _emergencyTimeline.value.toMutableList()
-        currentList.add(entry)
-        _emergencyTimeline.value = currentList
+    private fun addTimelineEntry(title: String, description: String = "Emergency action recorded.", severity: String = "Info") {
+        val timestamp = LocalDateTime.now().format(timeFormatter)
+        val entry = EmergencyTimelineEntry(System.currentTimeMillis(), timestamp, title, description, severity)
+        _emergencyTimeline.value = listOf(entry) + _emergencyTimeline.value
     }
 
     fun getTimelineFormatted(): String {
-        return _emergencyTimeline.value.joinToString("\n")
+        return _emergencyTimeline.value.joinToString("\n") { "${it.timestamp} — ${it.title}: ${it.description}" }
     }
 
     // ========== DISMISS DIALOG ==========

@@ -1,13 +1,13 @@
 package com.careapp.app.data.repository
 
 import android.content.Context
-import com.careapp.app.data.database.CareAnchorDatabase
+import com.careapp.app.data.database.CareAppDatabase
 import com.careapp.app.data.*
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 class CareRepository private constructor(context: Context) {
-    private val database = CareAnchorDatabase.getDatabase(context)
+    private val database = CareAppDatabase.getDatabase(context)
     private val medicationDao = database.medicationDao()
     private val routineDao = database.routineDao()
     private val memoryCardDao = database.memoryCardDao()
@@ -24,6 +24,8 @@ class CareRepository private constructor(context: Context) {
 
     // ========== MEDICATION OPERATIONS ==========
     fun getAllMedications(): Flow<List<Medication>> = medicationDao.getAllMedications()
+
+    suspend fun getAllMedicationsSync(): List<Medication> = medicationDao.getAllMedicationsSync()
 
     suspend fun insertMedication(medication: Medication) { medicationDao.insertMedication(medication) }
 

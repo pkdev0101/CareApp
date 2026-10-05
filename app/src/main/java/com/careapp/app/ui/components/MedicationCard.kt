@@ -1,9 +1,7 @@
 package com.careapp.app.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -69,16 +67,14 @@ fun MedicationCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
                     onClick = onTakeMedicine,
                     colors = ButtonDefaults.buttonColors(containerColor = SuccessTeal),
-                    modifier = Modifier.height(60.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("I Took It", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = White)
@@ -87,7 +83,7 @@ fun MedicationCard(
                 Button(
                     onClick = onRemindLater,
                     colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
-                    modifier = Modifier.height(60.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Remind Later", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark)
@@ -96,7 +92,7 @@ fun MedicationCard(
                 Button(
                     onClick = onNeedHelp,
                     colors = ButtonDefaults.buttonColors(containerColor = DangerRed),
-                    modifier = Modifier.height(60.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Need Help", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = White)

@@ -17,6 +17,8 @@ object DoctorSummaryBuilder {
     ): String {
         val missedCount = medicationLogs.count { it.status == "Missed" }
         val takenCount = medicationLogs.count { it.status == "Taken" }
+        val skippedCount = medicationLogs.count { it.status == "Skipped" }
+        val adherence = if (medicationLogs.isEmpty()) 0 else (takenCount * 100 / medicationLogs.size)
         val confusionEpisodes = caregiverNotes.count { it.confusionNotes.isNotEmpty() }
 
         return """
@@ -35,6 +37,8 @@ object DoctorSummaryBuilder {
             Total Medications: ${medications.size}
             Doses Taken: $takenCount
             Doses Missed: ⚠️ $missedCount
+            Doses Skipped: $skippedCount
+            Adherence: $adherence%
 
             ${if (missedCount > 0) "CONCERN: $missedCount missed doses this week" else "✓ Good medication compliance"}
 
@@ -69,6 +73,32 @@ object DoctorSummaryBuilder {
             } else {
                 "No caregiver notes available"
             }}
+
+            ─────────────────────────────────────────
+            MEMORY / CONFUSION SUMMARY
+            ─────────────────────────────────────────
+            Confusion episodes: $confusionEpisodes
+            ${caregiverNotes.joinToString("\n") { "• ${it.confusionNotes.ifBlank { "No confusion note recorded" }}" }}
+
+            ─────────────────────────────────────────
+            MOOD & SLEEP SUMMARY
+            ─────────────────────────────────────────
+            ${caregiverNotes.joinToString("\n") { "• Mood: ${it.mood}; Sleep: ${it.sleepQuality}" }}
+
+            ─────────────────────────────────────────
+            SAFETY SUMMARY
+            ─────────────────────────────────────────
+            ${caregiverNotes.joinToString("\n") { "• ${it.safetyNotes}" }}
+            Wandering/lost events: Not recorded in this local report.
+
+            ─────────────────────────────────────────
+            CAREGIVER CONCERNS
+            ─────────────────────────────────────────
+            ${if (missedCount > 0 || confusionEpisodes > 0) generateConcernsSummary(missedCount, confusionEpisodes, 0) else "No concerns recorded this week."}
+
+            QUESTIONS FOR DOCTOR
+            • Are any medication times or reminders worth reviewing?
+            • What should caregivers watch for if confusion increases?
 
             ─────────────────────────────────────────
             RECOMMENDATIONS

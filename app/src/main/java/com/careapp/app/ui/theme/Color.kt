@@ -3,7 +3,7 @@ package com.careapp.app.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // ═══════════════════════════════════════════════════════════════
-// CAREANCHOR COLOR PALETTE - WCAG AAA COMPLIANT
+// CAREAPP COLOR PALETTE - WCAG AAA COMPLIANT
 // Warm blue-grey & soft coral theme (inspired by Memory Lane, Caring.com)
 // Calm, approachable, not clinical - designed for senior comfort
 // ═══════════════════════════════════════════════════════════════

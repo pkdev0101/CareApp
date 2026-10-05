@@ -43,7 +43,7 @@ object QRCodeGenerator {
     }
 
     fun generateCompactQRData(senior: SeniorProfile): String {
-        return "${senior.fullName}|${senior.primaryCaregiverName}|${senior.primaryCaregiverPhone}"
+        return "CAREAPP_BASIC\nNAME:${senior.fullName}\nCAREGIVER:${senior.primaryCaregiverName}\nPHONE:${senior.primaryCaregiverPhone}\nMEMORY:${senior.memoryNote}"
     }
 
     fun parseQRData(qrContent: String): Map<String, String>? {

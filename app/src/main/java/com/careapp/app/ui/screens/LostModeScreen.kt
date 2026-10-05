@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
-import com.careapp.app.ui.CareAnchorScreen
+import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.components.LargeButton
 import com.careapp.app.ui.theme.*
 
@@ -31,6 +31,7 @@ fun LostModeScreen(viewModel: com.careapp.app.viewmodel.LocationViewModel? = nul
     val latitude by (viewModel?.currentLatitude?.collectAsState() ?: remember { mutableStateOf(0.0) })
     val longitude by (viewModel?.currentLongitude?.collectAsState() ?: remember { mutableStateOf(0.0) })
     val timestamp by (viewModel?.locationTimestamp?.collectAsState() ?: remember { mutableStateOf("") })
+    val isWithinSafeZone by (viewModel?.isWithinSafeZone?.collectAsState() ?: remember { mutableStateOf(true) })
     val showDialog by (viewModel?.showDialog?.collectAsState() ?: remember { mutableStateOf(false) })
     val dialogTitle by (viewModel?.dialogTitle?.collectAsState() ?: remember { mutableStateOf("") })
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
@@ -51,6 +52,27 @@ fun LostModeScreen(viewModel: com.careapp.app.viewmodel.LocationViewModel? = nul
                 color = SupportPlum,
                 modifier = Modifier.padding(vertical = 20.dp)
             )
+        }
+
+        item {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Current location", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+                    Text(if (timestamp.isBlank()) "No location update yet. This demo uses simulated coordinates." else "Demo location updated at $timestamp", fontSize = 15.sp, color = Color.DarkGray)
+                    if (timestamp.isNotBlank()) Text("${"%.5f".format(latitude)}, ${"%.5f".format(longitude)}", fontSize = 18.sp, color = InfoTeal)
+                    Text(if (isWithinSafeZone) "Inside Safe Zone" else "Outside Safe Zone", fontWeight = FontWeight.Bold, color = if (isWithinSafeZone) SuccessTeal else WarningAmber, modifier = Modifier.padding(top = 6.dp))
+                }
+            }
+        }
+
+        item {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F1F5))) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Safe places", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+                    SampleData.savedPlaces.forEach { Text("• ${it.name} (${it.type})", fontSize = 15.sp, modifier = Modifier.padding(top = 4.dp)) }
+                    Text("Map preview — demo mode", fontSize = 14.sp, color = Color.Gray, modifier = Modifier.padding(top = 8.dp))
+                }
+            }
         }
 
         item {
@@ -173,17 +195,17 @@ fun LostModeScreen(viewModel: com.careapp.app.viewmodel.LocationViewModel? = nul
 
         item {
             LargeButton(
-                text = "Show QR Code",
-                onClick = { navController?.navigate(CareAnchorScreen.QRCode.name) },
+                text = "Show Emergency Card",
+                onClick = { navController?.navigate(CareAppScreen.Emergency.name) },
                 backgroundColor = AccentAmber
             )
         }
 
         item {
             LargeButton(
-                text = "Call 911\nEmergency",
+                text = "Share My Location",
                 onClick = { viewModel?.shareLocation() },
-                backgroundColor = DangerRed
+                backgroundColor = InfoTeal
             )
         }
 
@@ -193,7 +215,7 @@ fun LostModeScreen(viewModel: com.careapp.app.viewmodel.LocationViewModel? = nul
                     Text("Location found at $timestamp", fontWeight = FontWeight.Bold)
                     Text("${"%.5f".format(latitude)}, ${"%.5f".format(longitude)}", fontSize = 18.sp, color = InfoTeal)
                     Spacer(Modifier.height(8.dp))
-                    Button(onClick = { viewModel?.markAsSafe() }) { Text("I'm Safe") }
+                    Button(onClick = { viewModel?.markAsSafe() }) { Text("I’m Safe") }
                 }
             }
         }

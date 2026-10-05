@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 class MedicationViewModel(private val repository: CareRepository) : ViewModel() {
 
@@ -25,6 +26,17 @@ class MedicationViewModel(private val repository: CareRepository) : ViewModel() 
     // Medication logs for today
     private val _todayLogs = MutableStateFlow<List<MedicationLog>>(emptyList())
     val todayLogs: StateFlow<List<MedicationLog>> = _todayLogs.asStateFlow()
+
+    val overdueMedications: StateFlow<List<Medication>> = combine(medications, todayLogs) { medicationList, logs ->
+        val now = LocalTime.now()
+        medicationList.filter { medication ->
+            val scheduled = parseScheduledTime(medication.scheduledTime) ?: return@filter false
+            val resolved = logs.any {
+                it.medicationId == medication.id && it.status in setOf("Taken", "Skipped", "Needs Help", "Need Help")
+            }
+            !resolved && now.isAfter(scheduled.plusMinutes(30))
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // Dialog states
     private val _showDialog = MutableStateFlow(false)
@@ -148,5 +160,11 @@ class MedicationViewModel(private val repository: CareRepository) : ViewModel() 
         return todayLogs.value
             .find { it.medicationId == medicationId && it.status == "Taken" }
             ?.completedTime
+    }
+
+    private fun parseScheduledTime(value: String): LocalTime? = try {
+        LocalTime.parse(value.uppercase(), DateTimeFormatter.ofPattern("h:mm a"))
+    } catch (_: DateTimeParseException) {
+        null
     }
 }

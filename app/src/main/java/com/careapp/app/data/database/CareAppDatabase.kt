@@ -27,7 +27,7 @@ import com.careapp.app.data.dao.CaregiverNoteDao
     version = 1,
     exportSchema = false
 )
-abstract class CareAnchorDatabase : RoomDatabase() {
+abstract class CareAppDatabase : RoomDatabase() {
     abstract fun medicationDao(): MedicationDao
     abstract fun routineDao(): RoutineDao
     abstract fun memoryCardDao(): MemoryCardDao
@@ -35,13 +35,13 @@ abstract class CareAnchorDatabase : RoomDatabase() {
 
     companion object {
         @Volatile
-        private var INSTANCE: CareAnchorDatabase? = null
+        private var INSTANCE: CareAppDatabase? = null
 
-        fun getDatabase(context: Context): CareAnchorDatabase {
+        fun getDatabase(context: Context): CareAppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
-                    CareAnchorDatabase::class.java,
+                    CareAppDatabase::class.java,
                     "careanchor_database"
                 )
                     .fallbackToDestructiveMigration()

@@ -1,6 +1,7 @@
 package com.careapp.app.ui.screens
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,12 +18,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.theme.*
 import com.careapp.app.util.DoctorSummaryBuilder
+import com.careapp.app.util.PdfExportManager
 
 @Composable
-fun DoctorSummaryScreen() {
+fun DoctorSummaryScreen(navController: NavController? = null) {
     val context = LocalContext.current
     val senior = SampleData.seniorProfile
     val medications = SampleData.medications
@@ -122,13 +125,33 @@ fun DoctorSummaryScreen() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { /* Copy to clipboard */ },
+                onClick = {
+                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("CareApp Doctor Summary", reportText))
+                    Toast.makeText(context, "Summary copied", Toast.LENGTH_SHORT).show()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryTealLight)
             ) {
                 Text("📋 Copy to Clipboard", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedButton(
+                onClick = {
+                    val file = PdfExportManager.createTextPdf(context, "careapp-doctor-summary.pdf", "CareApp Doctor Summary", reportText)
+                    PdfExportManager.sharePdf(context, file, "Share Doctor Summary PDF")
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Export PDF") }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedButton(onClick = { navController?.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
+                Text("Back")
             }
 
             Spacer(modifier = Modifier.height(8.dp))

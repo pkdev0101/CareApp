@@ -67,7 +67,7 @@ fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -81,7 +81,7 @@ fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "My Family",
+                    text = "People",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = SecondaryCoral
@@ -98,7 +98,7 @@ fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? 
 
         item {
             Text(
-                text = "Important people in my life",
+                text = "Family, caregivers, doctors, and helpers",
                 fontSize = 18.sp,
                 color = Color.DarkGray,
                 modifier = Modifier.padding(bottom = 16.dp)
