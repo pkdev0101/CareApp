@@ -340,7 +340,7 @@ fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = fa
     NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp),
+            .height(82.dp),
         containerColor = PrimaryTeal
     ) {
         val legacyScreens = if (isCaregiverMode) {
@@ -383,16 +383,17 @@ fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = fa
                 icon = {
                     Text(
                         text = item.emoji,
-                        fontSize = 24.sp
+                        fontSize = 22.sp
                     )
                 },
                 label = {
                     Text(
                         text = item.label,
-                        fontSize = 12.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
                 },
+                modifier = Modifier.height(80.dp),
                 selected = isSelected,
                 onClick = {
                     if (!navController.popBackStack(item.screen.name, false) && currentDestination?.route != item.screen.name) {
