@@ -67,7 +67,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 .padding(16.dp)
         ) {
             Text(
-                text = "📋 Weekly Care Report",
+                text = "Weekly Care Report",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onPrimary
             )
