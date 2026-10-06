@@ -23,6 +23,7 @@ import com.careapp.app.data.Medication
 import com.careapp.app.data.MedicationLog
 import com.careapp.app.data.SampleData
 import com.careapp.app.data.repository.CareRepository
+import com.careapp.app.ui.components.CareSectionCard
 import com.careapp.app.ui.theme.*
 import com.careapp.app.util.DoctorSummaryBuilder
 import com.careapp.app.util.PdfExportManager
@@ -110,12 +111,12 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
             )
 
-            ReportSection("Patient") {
+            CareSectionCard("Patient") {
                 ReportRow("Name", senior.fullName)
                 ReportRow("Report period", "Last 7 days")
                 ReportRow("Doctor", senior.doctorName)
             }
-            ReportSection("Medication overview") {
+            CareSectionCard("Medication overview") {
                 ReportRow("Medications listed", medications.size.toString())
                 ReportRow("Expected doses", medicationCounts.expected.toString())
                 ReportRow("Doses taken", "${medicationCounts.taken} recorded")
@@ -126,7 +127,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            ReportSection("Current medications") {
+            CareSectionCard("Current medications") {
                 medications.forEach { medication ->
                     Text(
                         medication.name,
@@ -142,7 +143,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                     )
                 }
             }
-            ReportSection("Caregiver observations") {
+            CareSectionCard("Caregiver observations") {
                 val latest = caregiverNotes.maxByOrNull { it.date }
                 ReportRow("Mood", latest?.mood ?: "Not recorded")
                 ReportRow("Sleep", latest?.sleepQuality ?: "Not recorded")
@@ -216,20 +217,6 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-        }
-    }
-}
-
-@Composable
-private fun ReportSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            content()
         }
     }
 }

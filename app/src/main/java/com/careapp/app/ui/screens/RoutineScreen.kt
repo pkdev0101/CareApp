@@ -17,6 +17,7 @@ import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.RoutineViewModel
 import androidx.navigation.NavController
 import com.careapp.app.ui.CareAppScreen
+import com.careapp.app.ui.components.CareSectionCard
 
 @Composable
 fun RoutineScreen(viewModel: RoutineViewModel? = null, isCaregiverMode: Boolean = false, navController: NavController? = null) {
@@ -26,7 +27,7 @@ fun RoutineScreen(viewModel: RoutineViewModel? = null, isCaregiverMode: Boolean 
     val showDialog by (viewModel?.showDialog?.collectAsState() ?: remember { mutableStateOf(false) })
     val dialogTitle by (viewModel?.dialogTitle?.collectAsState() ?: remember { mutableStateOf("") })
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
-    LazyColumn(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(16.dp)) {
+    LazyColumn(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(16.dp), contentPadding = PaddingValues(bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item { Text("My Routine", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(vertical = 12.dp)) }
         item { Text(if (isCaregiverMode) "Review the routine, or open Care Setup to edit it." else "Tap a task when it is complete.", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp)) }
         if (isCaregiverMode) item { Button(onClick = { navController?.navigate(CareAppScreen.CareSetup.name) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Edit routines in Care Setup") } }
@@ -39,10 +40,10 @@ fun RoutineScreen(viewModel: RoutineViewModel? = null, isCaregiverMode: Boolean 
 
 @Composable
 private fun RoutineSection(category: String, tasks: List<RoutineTask>, viewModel: RoutineViewModel?) {
-    Text(category, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal, modifier = Modifier.padding(top = 12.dp))
+    CareSectionCard(category) {
     tasks.forEach { task ->
-        Card(Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-            Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+            Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(task.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Text("Suggested: ${task.suggestedTime}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -51,5 +52,6 @@ private fun RoutineSection(category: String, tasks: List<RoutineTask>, viewModel
                 Checkbox(checked = task.completed, onCheckedChange = { viewModel?.toggleTaskCompletion(task) })
             }
         }
+    }
     }
 }

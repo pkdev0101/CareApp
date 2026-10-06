@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.components.MedicationCard
+import com.careapp.app.ui.components.CareSectionCard
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.MedicationViewModel
 import com.careapp.app.util.PdfExportManager
@@ -57,8 +58,10 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
 
         if (isCaregiverMode) {
             item {
-                Text("Instructions shown here are entered by the caregiver. CareApp does not recommend doses.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
-                Button(onClick = { navController?.navigate(com.careapp.app.ui.CareAppScreen.CareSetup.name) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Add or update medications") }
+                CareSectionCard("Medication setup") {
+                    Text("Instructions shown here are entered by the caregiver. CareApp does not recommend doses.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Button(onClick = { navController?.navigate(com.careapp.app.ui.CareAppScreen.CareSetup.name) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Add or update medications") }
+                }
             }
         }
 
@@ -69,28 +72,16 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
         }
 
         item {
-            Text(
-                text = "Today's Schedule",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-        }
-
-        items(sortedMedications) { medication ->
-            MedicationCard(
-                medication = medication,
-                onTakeMedicine = {
-                    viewModel?.takeMedication(medication.id, medication)
-                },
-                onRemindLater = {
-                    viewModel?.remindLater(medication.id, medication)
-                },
-                onNeedHelp = {
-                    viewModel?.needHelp(medication.id, medication)
+            CareSectionCard(if (isCaregiverMode) "Medication schedule" else "Today's Schedule") {
+                sortedMedications.forEach { medication ->
+                    MedicationCard(
+                        medication = medication,
+                        onTakeMedicine = { viewModel?.takeMedication(medication.id, medication) },
+                        onRemindLater = { viewModel?.remindLater(medication.id, medication) },
+                        onNeedHelp = { viewModel?.needHelp(medication.id, medication) }
+                    )
                 }
-            )
+            }
         }
 
         item {
