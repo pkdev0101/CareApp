@@ -1,7 +1,9 @@
 package com.careapp.app.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -38,8 +40,50 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
         item { Text("Record a few simple observations for the next caregiver.", fontSize = 18.sp) }
         item { CareSectionCard("Meals") { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) { MealCheck("Breakfast", breakfast) { breakfast = !breakfast; viewModel?.toggleBreakfast() }; MealCheck("Lunch", lunch) { lunch = !lunch; viewModel?.toggleLunch() }; MealCheck("Dinner", dinner) { dinner = !dinner; viewModel?.toggleDinner() } } } }
         item { CareSectionCard("Notes") { OutlinedTextField(value = note, onValueChange = { viewModel?.updateNoteContent(it) }, modifier = Modifier.fillMaxWidth(), minLines = 4, label = { Text("Notes") }) } }
-        item { CareSectionCard("Mood: $mood") { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("Calm", "Happy", "Worried", "Tired").forEach { value -> FilterChip(selected = mood == value, onClick = { viewModel?.setMood(value) }, label = { Text(value) }) } } } }
-        item { CareSectionCard("Sleep: $sleep") { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("Good", "Okay", "Poor").forEach { value -> FilterChip(selected = sleep == value, onClick = { viewModel?.setSleepQuality(value) }, label = { Text(value) }) } } } }
+        item {
+            CareSectionCard("Mood: $mood") {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("Calm", "Happy", "Worried", "Tired").forEach { value ->
+                        FilterChip(
+                            selected = mood == value,
+                            onClick = { viewModel?.setMood(value) },
+                            label = { Text(value, maxLines = 1) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        item {
+            CareSectionCard("Sleep: $sleep") {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("Good", "Okay", "Poor").forEach { value ->
+                        FilterChip(
+                            selected = sleep == value,
+                            onClick = { viewModel?.setSleepQuality(value) },
+                            label = { Text(value, maxLines = 1) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                    }
+                }
+            }
+        }
         item {
             CareSectionCard("Handoff actions") {
                 Button(
