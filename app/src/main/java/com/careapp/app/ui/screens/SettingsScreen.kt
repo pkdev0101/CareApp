@@ -56,7 +56,7 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
             SettingsCard("Text size") {
                 Text("Current: ${(textSizeScale * 100).toInt()}%", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Normal" to 1f, "Large" to 1.2f, "Extra large" to 1.4f).forEach { (label, scale) ->
+                    listOf("100%" to 1f, "120%" to 1.2f, "140%" to 1.4f).forEach { (label, scale) ->
                         Button(onClick = { viewModel?.setTextSize(scale); auditStore.record("Text size changed to $label") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), colors = ButtonDefaults.buttonColors(containerColor = if (textSizeScale == scale) PrimaryTeal else MaterialTheme.colorScheme.surfaceVariant, contentColor = if (textSizeScale == scale) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)) {
                             Text(label, fontSize = 13.sp)
                         }
