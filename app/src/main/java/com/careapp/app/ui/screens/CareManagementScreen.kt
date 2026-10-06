@@ -96,7 +96,7 @@ fun CareManagementScreen(type: CareManagementType, repository: CareRepository) {
         OutlinedTextField(name, { name = it }, label = { Text("Medication name *") }, singleLine = true)
         OutlinedTextField(dose, { dose = it }, label = { Text("Dose *") }, singleLine = true)
         OutlinedTextField(instructions, { instructions = it }, label = { Text("Instructions *") })
-        Box { OutlinedTextField(time, {}, readOnly = true, label = { Text("Time *") }, placeholder = { Text("Choose a 15-minute time slot") }, modifier = Modifier.fillMaxWidth().clickable { expanded = true }); DropdownMenu(expanded, { expanded = false }, modifier = Modifier.heightIn(max = 300.dp)) { medicationTimeSlots().forEach { DropdownMenuItem(text = { Text(it) }, onClick = { time = it; expanded = false }) } } }
+        Box { OutlinedTextField(time, {}, readOnly = true, label = { Text("Time *") }, placeholder = { Text("Choose a 15-minute time slot") }, trailingIcon = { TextButton(onClick = { expanded = true }) { Text("Choose") } }, modifier = Modifier.fillMaxWidth()); DropdownMenu(expanded, { expanded = false }, modifier = Modifier.heightIn(max = 300.dp)) { medicationTimeSlots().forEach { DropdownMenuItem(text = { Text(it) }, onClick = { time = it; expanded = false }) } } }
         Row { Checkbox(reminder, { reminder = it }); Text("Require notification reminder", modifier = Modifier.padding(top = 12.dp)) }
         if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
     }

@@ -94,6 +94,7 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
                                 label = { Text("Scheduled time *") },
                                 placeholder = { Text("Choose a 15-minute time") },
                                 isError = time.isBlank(),
+                                trailingIcon = { TextButton(onClick = { timeMenuExpanded = true }) { Text("Choose") } },
                                 modifier = Modifier.fillMaxWidth().clickable { timeMenuExpanded = true }
                             )
                             DropdownMenu(
