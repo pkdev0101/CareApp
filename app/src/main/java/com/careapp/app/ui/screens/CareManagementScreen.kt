@@ -179,7 +179,32 @@ private fun PersonEditor(existing: MemoryCard?, repository: CareRepository, audi
     }
 }
 
-@Composable private fun RoutineEditor(existing: RoutineTask?, repository: CareRepository, audit: CaregiverAuditStore, done: () -> Unit) { val scope = rememberCoroutineScope(); var title by remember { mutableStateOf(existing?.title ?: "") }; var category by remember { mutableStateOf(existing?.category ?: "Morning") }; var time by remember { mutableStateOf(existing?.suggestedTime ?: "") }; var error by remember { mutableStateOf("") }; EditorDialog(if (existing == null) "Add Routine" else "Edit Routine", title.isNotBlank() && category.isNotBlank() && time.isNotBlank(), error, done, { if (title.isBlank() || category.isBlank() || time.isBlank()) error = "Routine name, part of day, and time are required." else scope.launch { val saved = RoutineTask(existing?.id ?: 0, title.trim(), category.trim(), time.trim(), existing?.completed ?: false, existing?.completedTime, existing?.notes ?: ""); if (existing == null) repository.insertRoutineTask(saved) else repository.updateRoutineTask(saved); audit.record("Routine ${if (existing == null) "added" else "updated"}: ${saved.title}"); done() } }) { OutlinedTextField(title, { title = it }, label = { Text("Routine name *") }, singleLine = true); OutlinedTextField(category, { category = it }, label = { Text("Morning / Afternoon / Evening *") }, singleLine = true); OutlinedTextField(time, { time = it }, label = { Text("Suggested time *") }, singleLine = true) } }
+@Composable private fun RoutineEditor(existing: RoutineTask?, repository: CareRepository, audit: CaregiverAuditStore, done: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    var title by remember { mutableStateOf(existing?.title ?: "") }
+    var category by remember { mutableStateOf(existing?.category ?: "Morning") }
+    var time by remember { mutableStateOf(existing?.suggestedTime ?: "") }
+    var timeExpanded by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
+    EditorDialog(if (existing == null) "Add Routine" else "Edit Routine", title.isNotBlank() && category.isNotBlank() && time.isNotBlank(), error, done, {
+        if (title.isBlank() || category.isBlank() || time.isBlank()) error = "Routine name, part of day, and time are required."
+        else scope.launch {
+            val saved = RoutineTask(existing?.id ?: 0, title.trim(), category.trim(), time.trim(), existing?.completed ?: false, existing?.completedTime, existing?.notes ?: "")
+            if (existing == null) repository.insertRoutineTask(saved) else repository.updateRoutineTask(saved)
+            audit.record("Routine ${if (existing == null) "added" else "updated"}: ${saved.title}")
+            done()
+        }
+    }) {
+        OutlinedTextField(title, { title = it }, label = { Text("Routine name *") }, singleLine = true)
+        OutlinedTextField(category, { category = it }, label = { Text("Morning / Afternoon / Evening *") }, singleLine = true)
+        Box {
+            OutlinedTextField(time, {}, readOnly = true, label = { Text("Suggested time *") }, placeholder = { Text("Choose a 15-minute time slot") }, trailingIcon = { TextButton(onClick = { timeExpanded = true }) { Text("Choose") } }, modifier = Modifier.fillMaxWidth())
+            DropdownMenu(timeExpanded, { timeExpanded = false }, modifier = Modifier.heightIn(max = 300.dp)) {
+                medicationTimeSlots().forEach { slot -> DropdownMenuItem(text = { Text(slot) }, onClick = { time = slot; timeExpanded = false }) }
+            }
+        }
+    }
+}
 
 @Composable private fun PlaceEditor(existing: SavedPlace?, repository: CareRepository, audit: CaregiverAuditStore, done: () -> Unit) { val scope = rememberCoroutineScope(); var name by remember { mutableStateOf(existing?.name ?: "") }; var type by remember { mutableStateOf(existing?.type ?: "Safe place") }; var notes by remember { mutableStateOf(existing?.notes ?: "") }; var error by remember { mutableStateOf("") }; EditorDialog(if (existing == null) "Add Place" else "Edit Place", name.isNotBlank() && type.isNotBlank(), error, done, { if (name.isBlank() || type.isBlank()) error = "Place name and type are required." else scope.launch { val saved = SavedPlace(existing?.id ?: 0, name.trim(), type.trim(), existing?.latitude ?: 0.0, existing?.longitude ?: 0.0, notes.trim()); if (existing == null) repository.insertPlace(saved) else repository.updatePlace(saved); audit.record("Place ${if (existing == null) "added" else "updated"}: ${saved.name}"); done() } }) { OutlinedTextField(name, { name = it }, label = { Text("Place name *") }, singleLine = true); OutlinedTextField(type, { type = it }, label = { Text("Place type *") }, singleLine = true); OutlinedTextField(notes, { notes = it }, label = { Text("Address or notes") }) } }
 
