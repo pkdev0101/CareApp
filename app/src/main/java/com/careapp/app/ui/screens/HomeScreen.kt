@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +67,7 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
             Card(colors = CardDefaults.cardColors(containerColor = SupportPlum), modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                     LargeButton(text = "Help Me Remember", onClick = { navController?.navigate(CareAppScreen.Help.name) }, backgroundColor = SupportPlum, modifier = Modifier.padding(0.dp))
-                    Text("What was I doing? What do I do next?", color = Color.White, fontSize = 16.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+                    Text("What was I doing? What do I do next?", color = MaterialTheme.colorScheme.onPrimary, fontSize = 16.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
                 }
             }
         }
@@ -78,7 +77,8 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
@@ -93,12 +93,12 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
                         text = nextTask,
                         fontSize = 21.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.DarkGray
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = "Due at ${nextMedication?.scheduledTime ?: "today"}",
                         fontSize = 16.sp,
-                        color = Color.DarkGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                     OutlinedButton(
@@ -115,21 +115,23 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
 
         // Orientation Information
         item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(16.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                OrientationInfoRow("Today is", "$dayName, $monthDay")
-                Spacer(modifier = Modifier.height(12.dp))
-                OrientationInfoRow("You are at", "home")
-                Spacer(modifier = Modifier.height(12.dp))
-                OrientationInfoRow("Next task", nextTask)
-                Spacer(modifier = Modifier.height(12.dp))
-                OrientationInfoRow("Next visitor", nextVisitor)
-                Spacer(modifier = Modifier.height(12.dp))
-                OrientationInfoRow("Emergency contact", senior.primaryCaregiverName)
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    OrientationInfoRow("Today is", "$dayName, $monthDay")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OrientationInfoRow("You are at", "home")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OrientationInfoRow("Next task", nextTask)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OrientationInfoRow("Next visitor", nextVisitor)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OrientationInfoRow("Emergency contact", senior.primaryCaregiverName)
+                }
             }
         }
 
@@ -209,7 +211,7 @@ fun OrientationInfoRow(label: String, value: String) {
             text = label,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.DarkGray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             text = value,
