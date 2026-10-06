@@ -222,7 +222,7 @@ fun CareAppRoot() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = CareAppScreen.Home.name,
+                startDestination = if (isCaregiverMode) CareAppScreen.CaregiverNotes.name else CareAppScreen.Home.name,
                 enterTransition = { EnterTransition.None },
                 exitTransition = { ExitTransition.None },
                 popEnterTransition = { EnterTransition.None },
