@@ -55,13 +55,12 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         item { SectionLabel("Accessibility") }
         item {
             SettingsCard("Text size") {
-                Text("Current: ${(textSizeScale * 100).toInt()}%", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Choose the letter size that feels most comfortable.", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("100%" to 1f, "120%" to 1.2f, "140%" to 1.4f).forEach { (label, scale) ->
+                    listOf("Default" to 1f, "Larger" to 1.2f, "Largest" to 1.4f).forEach { (label, scale) ->
                         Button(onClick = { viewModel?.setTextSize(scale); auditStore.record("Text size changed to $label") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), colors = ButtonDefaults.buttonColors(containerColor = if (textSizeScale == scale) PrimaryTeal else MaterialTheme.colorScheme.surfaceVariant, contentColor = if (textSizeScale == scale) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("A", fontSize = (18f * scale).sp, fontWeight = FontWeight.Bold, lineHeight = (20f * scale).sp)
-                                Text(label, fontSize = 11.sp)
                             }
                         }
                     }
