@@ -37,7 +37,7 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
-            Text("Settings", style = MaterialTheme.typography.headlineMedium, color = PrimaryTeal)
+            Text("Settings", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
             Text("Adjust CareApp for the person using it.", style = MaterialTheme.typography.bodyLarge)
         }
         if (isCaregiverMode) {
@@ -89,7 +89,7 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("About CareApp", style = MaterialTheme.typography.titleLarge, color = PrimaryTeal)
+                    Text("About CareApp", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                     Text("Version 1.0", color = TextGray)
                     Text("A memory-care safety app for seniors and caregivers.", modifier = Modifier.padding(top = 4.dp))
                     if (isCaregiverMode && aboutTaps in 1..4) Text("About CareApp", color = TextGray, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
@@ -114,13 +114,13 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(text, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal, modifier = Modifier.padding(top = 6.dp))
+    Text(text, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 6.dp))
 }
 
 @Composable
 private fun SettingsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = { Text(title, style = MaterialTheme.typography.titleLarge, color = PrimaryTeal); content() })
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = { Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface); content() })
     }
 }
 
