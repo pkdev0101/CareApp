@@ -22,6 +22,8 @@ import com.careapp.app.ui.components.MedicationCard
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.MedicationViewModel
 import com.careapp.app.util.PdfExportManager
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavController? = null, isCaregiverMode: Boolean = false) {
@@ -34,6 +36,7 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
     val duplicateWarningTime by (viewModel?.duplicateWarningTime?.collectAsState() ?: remember { mutableStateOf("") })
     val overdueMedications by (viewModel?.overdueMedications?.collectAsState() ?: remember { mutableStateOf(emptyList()) })
     val context = LocalContext.current
+    val sortedMedications = medications.sortedBy { medicationMinutesUntilNow(it.scheduledTime) }
 
     LazyColumn(
         modifier = Modifier
@@ -76,7 +79,7 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
             )
         }
 
-        items(medications) { medication ->
+        items(sortedMedications) { medication ->
             MedicationCard(
                 medication = medication,
                 onTakeMedicine = {
@@ -151,6 +154,16 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
             }
         )
     }
+}
+
+private fun medicationMinutesUntilNow(scheduledTime: String): Int {
+    val parsed = runCatching {
+        LocalTime.parse(scheduledTime.uppercase(), DateTimeFormatter.ofPattern("h:mm a"))
+    }.getOrNull() ?: return Int.MAX_VALUE
+    val now = LocalTime.now()
+    val currentMinutes = now.hour * 60 + now.minute
+    val scheduledMinutes = parsed.hour * 60 + parsed.minute
+    return (scheduledMinutes - currentMinutes + 24 * 60) % (24 * 60)
 }
 
 @Composable
