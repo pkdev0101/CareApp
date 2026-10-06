@@ -172,7 +172,16 @@ fun CareAppRoot() {
                     },
                     title = {
                         Column {
-                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Row(
+                                modifier = Modifier.clickable {
+                                    careAppTitleTaps++
+                                    if (careAppTitleTaps >= 10) {
+                                        careAppTitleTaps = 0
+                                        navController.navigate(CareAppScreen.DemoMode.name)
+                                    }
+                                },
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            ) {
                                 Surface(
                                     modifier = Modifier.size(30.dp),
                                     shape = androidx.compose.foundation.shape.CircleShape,
@@ -194,15 +203,6 @@ fun CareAppRoot() {
                                 Spacer(Modifier.width(6.dp))
                                 Text(
                                     "CareApp",
-                                    modifier = Modifier.clickable {
-                                        if (isCaregiverMode) {
-                                            careAppTitleTaps++
-                                            if (careAppTitleTaps >= 10) {
-                                                careAppTitleTaps = 0
-                                                navController.navigate(CareAppScreen.DemoMode.name)
-                                            }
-                                        }
-                                    },
                                     fontSize = 19.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
