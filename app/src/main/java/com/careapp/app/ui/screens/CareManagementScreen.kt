@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.careapp.app.data.*
 import com.careapp.app.data.repository.CareRepository
@@ -118,7 +120,7 @@ private fun PersonEditor(existing: MemoryCard?, repository: CareRepository, audi
     val scope = rememberCoroutineScope()
     var name by remember { mutableStateOf(existing?.name ?: "") }
     var relationship by remember { mutableStateOf(existing?.relationship ?: "") }
-    var phone by remember { mutableStateOf(existing?.phone ?: "") }
+    var phone by remember { mutableStateOf(existing?.phone?.filter(Char::isDigit)?.take(10) ?: "") }
     var notes by remember { mutableStateOf(existing?.memoryCue ?: "") }
     var photoUri by remember { mutableStateOf(existing?.photoUri) }
     var error by remember { mutableStateOf("") }
@@ -132,12 +134,12 @@ private fun PersonEditor(existing: MemoryCard?, repository: CareRepository, audi
     }
     EditorDialog(
         if (existing == null) "Add Person" else "Edit Person",
-        name.isNotBlank() && relationship.isNotBlank() && phone.isNotBlank(),
+        name.isNotBlank() && relationship.isNotBlank() && phone.length == 10,
         error,
         done,
         {
-            if (name.isBlank() || relationship.isBlank() || phone.isBlank()) {
-                error = "Name, relationship, and phone are required."
+            if (name.isBlank() || relationship.isBlank() || phone.length != 10) {
+                error = "Name and relationship are required; phone must contain exactly 10 digits."
             } else scope.launch {
                 val saved = MemoryCard(existing?.id ?: 0, name.trim(), relationship.trim(), notes.trim(), existing?.helpsWith ?: "", phone.trim(), photoUri)
                 if (existing == null) repository.insertMemoryCard(saved) else repository.updateMemoryCard(saved)
@@ -156,7 +158,7 @@ private fun PersonEditor(existing: MemoryCard?, repository: CareRepository, audi
         }
         OutlinedTextField(name, { name = it }, label = { Text("Name *") }, singleLine = true)
         OutlinedTextField(relationship, { relationship = it }, label = { Text("Relationship *") }, singleLine = true)
-        OutlinedTextField(phone, { phone = it }, label = { Text("Phone *") }, singleLine = true)
+        OutlinedTextField(phone, { phone = it.filter(Char::isDigit).take(10) }, label = { Text("Phone number (10 digits) *") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), supportingText = { Text("${phone.length}/10 digits") }, isError = phone.isNotEmpty() && phone.length != 10)
         OutlinedTextField(notes, { notes = it }, label = { Text("Memory cue") })
     }
 }
