@@ -5,7 +5,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,11 +52,11 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
         }
         if (summary.isNotBlank()) item { Card { Text(summary, modifier = Modifier.padding(16.dp), fontSize = 17.sp) } }
         item {
-            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F1F5))) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Caregiver audit trail", fontWeight = FontWeight.Bold, color = PrimaryTeal)
-                    Text("Recent changes include caregiver name and the last four digits of the local security code.", fontSize = 13.sp, color = TextGray)
-                    Text(auditSummary, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                    Text("Caregiver audit trail", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Recent changes include caregiver name and the last four digits of the local security code.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(auditSummary, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(top = 8.dp))
                 }
             }
         }

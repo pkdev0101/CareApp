@@ -166,20 +166,20 @@ fun CareAppRoot() {
                                     color = MaterialTheme.colorScheme.primaryContainer
                                 ) {
                                     Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-                                        Text("C", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                        Text(
+                                            when (currentRoute) {
+                                                CareAppScreen.Help.name -> "!"
+                                                CareAppScreen.CalmMode.name -> "?"
+                                                else -> getTopBarIcon(currentRoute)
+                                            },
+                                            fontSize = 17.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
                                     }
                                 }
                                 Spacer(Modifier.width(6.dp))
                                 Text("CareApp", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                if (currentRoute == CareAppScreen.Help.name || currentRoute == CareAppScreen.CalmMode.name) {
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(
-                                        if (currentRoute == CareAppScreen.Help.name) "!" else "?",
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primaryContainer
-                                    )
-                                }
                             }
                             val section = getTopBarTitle(currentRoute, isCaregiverMode)
                             if (section != null && section != "CareApp") {
@@ -251,7 +251,7 @@ fun CareAppRoot() {
                     EmergencyScreen(viewModel = emergencyViewModel, navController = navController)
                 }
                 composable(CareAppScreen.Lost.name) {
-                    LostModeScreen(viewModel = locationViewModel, navController = navController)
+                    LostModeScreen(viewModel = locationViewModel, navController = navController, repository = repository)
                 }
                 composable(CareAppScreen.Help.name) {
                     HelpScreen(navController = navController, emergencyViewModel = emergencyViewModel, locationViewModel = locationViewModel)
@@ -317,7 +317,7 @@ fun CareAppRoot() {
                             if (!hasPin) caregiverPinStore.setPin(caregiverPin)
                             showCaregiverPinDialog = false
                             modeViewModel.toggleMode()
-                            navController.navigate(CareAppScreen.Home.name) {
+                            navController.navigate(CareAppScreen.CaregiverNotes.name) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = false }
                                 launchSingleTop = true
                             }

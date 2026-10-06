@@ -14,13 +14,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
+import com.careapp.app.data.repository.CareRepository
 import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.components.LargeButton
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.LocationViewModel
 
 @Composable
-fun LostModeScreen(viewModel: LocationViewModel? = null, navController: NavController? = null) {
+fun LostModeScreen(viewModel: LocationViewModel? = null, navController: NavController? = null, repository: CareRepository? = null) {
     val senior = SampleData.seniorProfile
     val context = LocalContext.current
     val latitude by (viewModel?.currentLatitude?.collectAsState() ?: remember { mutableStateOf(0.0) })
@@ -31,13 +32,19 @@ fun LostModeScreen(viewModel: LocationViewModel? = null, navController: NavContr
     val showDialog by (viewModel?.showDialog?.collectAsState() ?: remember { mutableStateOf(false) })
     val dialogTitle by (viewModel?.dialogTitle?.collectAsState() ?: remember { mutableStateOf("") })
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
+    val people by (repository?.getAllMemoryCards()?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList()) })
+    val caregiver = people.firstOrNull { it.relationship.contains("caregiver", ignoreCase = true) }
+        ?: people.firstOrNull()
+    val caregiverName = caregiver?.name ?: senior.primaryCaregiverName
+    val caregiverPhone = caregiver?.phone ?: senior.primaryCaregiverPhone
 
     LaunchedEffect(Unit) { viewModel?.getCurrentLocation() }
 
     fun shareLocation() {
-        if (shareText.isBlank()) return
-        val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, shareText) }
-        context.startActivity(Intent.createChooser(intent, "Share My Location"))
+        viewModel?.getCurrentLocation { refreshedText ->
+            val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, refreshedText) }
+            context.startActivity(Intent.createChooser(intent, "Share My Location"))
+        }
     }
 
     LazyColumn(
@@ -66,15 +73,14 @@ fun LostModeScreen(viewModel: LocationViewModel? = null, navController: NavContr
                 }
             }
         }
-        item { LargeButton("Refresh Location", { viewModel?.getCurrentLocation() }, backgroundColor = MaterialTheme.colorScheme.primary, textColor = MaterialTheme.colorScheme.onPrimary) }
         item { LargeButton("Share My Location", { shareLocation() }, backgroundColor = MaterialTheme.colorScheme.primary, textColor = MaterialTheme.colorScheme.onPrimary) }
         item {
-            LargeButton("Call Caregiver\n${senior.primaryCaregiverName}", {
-                runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:${senior.primaryCaregiverPhone}"))) }
+            LargeButton("Call Caregiver\n$caregiverName", {
+                runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:$caregiverPhone"))) }
             }, backgroundColor = MaterialTheme.colorScheme.primary, textColor = MaterialTheme.colorScheme.onPrimary)
         }
         item { LargeButton("Emergency Card & QR", { navController?.navigate(CareAppScreen.QRCode.name) }, backgroundColor = MaterialTheme.colorScheme.secondary, textColor = MaterialTheme.colorScheme.onSecondary) }
-        item { Button(onClick = { viewModel?.markAsSafe() }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("I'm Safe") } }
+        item { LargeButton("I'm Safe", { viewModel?.markAsSafe() }, backgroundColor = MaterialTheme.colorScheme.primary, textColor = MaterialTheme.colorScheme.onPrimary) }
         item {
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                 Column(Modifier.padding(14.dp)) {

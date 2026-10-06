@@ -78,7 +78,7 @@ fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? 
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -86,19 +86,19 @@ fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp),
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "People",
-                    fontSize = 32.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = SecondaryCoral
                 )
                 Button(
                     onClick = { contactPickerLauncher.launch(null) },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryTealLight),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     contentPadding = PaddingValues(8.dp)
                 ) {
                     Text("➕ Add", fontSize = 12.sp)
@@ -109,9 +109,9 @@ fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? 
         item {
             Text(
                 text = "Family, caregivers, doctors, and helpers",
-                fontSize = 18.sp,
-                color = Color.DarkGray,
-                modifier = Modifier.padding(bottom = 16.dp)
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
         }
 
@@ -120,33 +120,33 @@ fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? 
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp),
+                        .padding(vertical = 6.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp)
+                            .padding(12.dp)
                     ) {
                         Text(
                             text = "✓ New contact added",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF2E7D32)
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = selectedContactName,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = SecondaryCoral
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         if (selectedContactPhone.isNotEmpty()) {
                             Text(
                                 text = selectedContactPhone,
                                 fontSize = 14.sp,
-                                color = Color.Gray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -168,15 +168,15 @@ fun MemoryCardItem(card: MemoryCard) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 6.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(14.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AnimatedPersonAvatar(card.name, card.photoUri, Modifier.padding(end = 12.dp))
@@ -184,11 +184,11 @@ fun MemoryCardItem(card: MemoryCard) {
                 text = "This is ${card.name}.",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = SecondaryCoral
+                color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "She is your ${card.relationship}.",
@@ -196,24 +196,24 @@ fun MemoryCardItem(card: MemoryCard) {
                 fontWeight = FontWeight.SemiBold
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = card.memoryCue,
                 fontSize = 16.sp,
-                color = Color.DarkGray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "She helps with ${card.helpsWith}.",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = InfoTeal
+                color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Phone: ${card.phone}",

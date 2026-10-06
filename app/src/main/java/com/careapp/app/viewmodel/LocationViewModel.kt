@@ -65,7 +65,7 @@ class LocationViewModel(private val repository: CareRepository) : ViewModel() {
     }
 
     // ========== GET CURRENT LOCATION ==========
-    fun getCurrentLocation() {
+    fun getCurrentLocation(onUpdated: (String) -> Unit = {}) {
         viewModelScope.launch {
             // Demo-safe location near the saved San Diego home location.
             val latitude = 32.7157 + (Math.random() - 0.5) * 0.002
@@ -76,13 +76,15 @@ class LocationViewModel(private val repository: CareRepository) : ViewModel() {
             _currentLongitude.value = longitude
             _locationTimestamp.value = timestamp
             _locationStatusText.value = "Demo location"
-            _shareLocationText.value = buildString {
+            val refreshedShareText = buildString {
                 append("CareApp Location\nI may need help.\n\n")
                 append("Latitude: %.5f\nLongitude: %.5f\nLast updated: %s\n\n".format(latitude, longitude, timestamp))
                 append("Google Maps link: https://maps.google.com/?q=$latitude,$longitude\n\n")
                 append("Caregiver note: I may have memory loss. Please call my caregiver if needed.\n")
                 append("Demo location for app testing.")
             }
+            _shareLocationText.value = refreshedShareText
+            onUpdated(refreshedShareText)
 
             // Check if within safe zone (demo: within 0.05 degrees = ~5km)
             val distanceFromHome = com.careapp.app.util.LocationManager.calculateDistance(

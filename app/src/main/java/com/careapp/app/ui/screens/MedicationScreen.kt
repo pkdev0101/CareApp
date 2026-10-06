@@ -48,14 +48,14 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
                 text = if (isCaregiverMode) "Medication management" else "Today's medicine",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryTeal,
-                modifier = Modifier.padding(vertical = 16.dp)
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(vertical = 8.dp)
             )
         }
 
         if (isCaregiverMode) {
             item {
-                Text("Instructions shown here are entered by the caregiver. CareApp does not recommend doses.", fontSize = 14.sp, color = Color.DarkGray, modifier = Modifier.padding(bottom = 8.dp))
+                Text("Instructions shown here are entered by the caregiver. CareApp does not recommend doses.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
                 Button(onClick = { navController?.navigate(com.careapp.app.ui.CareAppScreen.CareSetup.name) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Add or update medications") }
             }
         }
@@ -71,7 +71,7 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
                 text = "Today's Schedule",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.DarkGray,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
         }
@@ -157,8 +157,8 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
 private fun AlertCard(text: String) {
     androidx.compose.material3.Card(
         modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {
-        Text(text, modifier = Modifier.padding(16.dp), color = Color(0xFF8A3B00), fontWeight = FontWeight.Bold)
+        Text(text, modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onErrorContainer, fontWeight = FontWeight.Bold)
     }
 }

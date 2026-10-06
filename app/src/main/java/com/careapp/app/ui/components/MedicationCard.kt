@@ -7,6 +7,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,21 +30,21 @@ fun MedicationCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 6.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(16.dp)
         ) {
             Text(
                 text = medication.scheduledTime,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryTeal
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -52,17 +53,17 @@ fun MedicationCard(
                 text = medication.name,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(text = "Dose: ${medication.dose}", fontSize = 16.sp, color = TextDark)
-            Text(text = "Instructions: ${medication.instructions}", fontSize = 14.sp, color = TextGray)
+            Text(text = "Dose: ${medication.dose}", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text(text = "Instructions: ${medication.instructions}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 text = "Pill: ${medication.pillDescription}",
                 fontSize = 14.sp,
-                color = Color.DarkGray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -73,29 +74,29 @@ fun MedicationCard(
             ) {
                 Button(
                     onClick = onTakeMedicine,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryTealLight),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("I Took It", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = White)
+                    Text("I Took It", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                 }
 
                 Button(
                     onClick = onRemindLater,
-                    colors = ButtonDefaults.buttonColors(containerColor = BackgroundMedium),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Remind Later", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    Text("Remind Later", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 }
 
                 Button(
                     onClick = onNeedHelp,
-                    colors = ButtonDefaults.buttonColors(containerColor = DangerRed),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Need Help", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = White)
+                    Text("Need Help", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onError)
                 }
             }
         }
