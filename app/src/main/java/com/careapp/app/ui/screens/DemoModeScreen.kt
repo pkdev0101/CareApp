@@ -7,17 +7,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.theme.*
+import com.careapp.app.util.CaregiverPinStore
 
 private data class DemoStep(val title: String, val description: String, val route: CareAppScreen)
 
 @Composable
 fun DemoModeScreen(navController: NavController? = null) {
+    val context = LocalContext.current
+    val pinStore = remember { CaregiverPinStore(context) }
     val steps = listOf(
         DemoStep("Orientation Board", "See the senior's name, routine, and caregiver contact.", CareAppScreen.Home),
         DemoStep("Medication Safety", "Review the schedule and overdue-dose safeguards.", CareAppScreen.Medication),
@@ -37,6 +41,16 @@ fun DemoModeScreen(navController: NavController? = null) {
             Text("CareApp Demo Mode", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
             Text("Demo data for Congressional App Challenge", color = Color(0xFF6D4C41), modifier = Modifier.padding(vertical = 8.dp))
             Text("Step ${current + 1} of ${steps.size}", fontSize = 16.sp, color = TextGray)
+        }
+        item {
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Temporary Demo PINs", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("These values are shown for demonstration only. Do not use this display in production.", color = MaterialTheme.colorScheme.error)
+                    Text("Supervisor PIN: ${pinStore.supervisorPin()}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Caregiver PIN: ${pinStore.caregiverPin()}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
         }
         item {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {

@@ -12,6 +12,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.CareAppScreen
+import com.careapp.app.ui.components.CareSectionCard
 import com.careapp.app.viewmodel.MemoryCardViewModel
 import com.careapp.app.ui.components.LargeButton
 import com.careapp.app.ui.theme.*
@@ -264,17 +266,16 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
 
         // Repeated-question helper
         item {
-            Text(
-                text = "Common Questions",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryTeal,
-                modifier = Modifier.padding(vertical = 12.dp)
-            )
+            CareSectionCard("Common Questions") {
+                Text("Tap a question to see a calm, simple answer.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
 
         item {
-            CommonQuestionCard("Where am I?", "You are at ${senior.address}. You are safe.")
+            CommonQuestionCard(
+                "Where am I?",
+                "You are at ${senior.address}.\nNearest cross street: Example Street & Main Avenue (demo location).\nYou are safe."
+            )
         }
 
         item {
@@ -361,7 +362,7 @@ private fun ContextRecoveryCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+            Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(4.dp))
             if (expanded) {
                 Text(answer, fontSize = 17.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -369,9 +370,8 @@ private fun ContextRecoveryCard(
                     Button(
                         onClick = { onAction?.invoke() },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(top = 10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryTealLight)
                     ) {
-                        Text(label, fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary)
+                        Text(label, fontSize = 16.sp)
                     }
                 }
             } else {
@@ -385,53 +385,38 @@ private fun ContextRecoveryCard(
 private fun WhatHelpsTracker() {
     val counts = remember { mutableStateMapOf<String, Int>() }
     val actions = listOf("Breathing timer", "Family photos", "Reassurance message", "Call caregiver", "Common question helper")
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F0FA))) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("What Helps", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = SupportPlum)
-            Text("After an action, choose what helped. This is local demo tracking.", fontSize = 14.sp, color = Color.DarkGray, modifier = Modifier.padding(vertical = 6.dp))
+    CareSectionCard("What Helps") {
+            Text("After an action, choose what helped. This is local demo tracking.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             actions.forEach { action ->
                 Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(action, modifier = Modifier.weight(1f), fontSize = 14.sp)
-                    Button(onClick = { counts[action] = (counts[action] ?: 0) + 1 }, colors = ButtonDefaults.buttonColors(containerColor = SuccessTeal)) { Text("Helped") }
+                    Text(action, modifier = Modifier.weight(1f), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Button(onClick = { counts[action] = (counts[action] ?: 0) + 1 }) { Text("Helped") }
                     Spacer(Modifier.width(4.dp))
-                    Button(onClick = { counts[action] = counts[action] ?: 0 }, colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)) { Text("Not sure") }
+                    OutlinedButton(onClick = { counts[action] = counts[action] ?: 0 }) { Text("Not sure") }
                 }
             }
             val best = counts.maxByOrNull { it.value }
             if (best != null && best.value > 0) {
-                Text("Most Helpful This Week: ${best.key} (${best.value} times)", fontWeight = FontWeight.Bold, color = PrimaryTeal, modifier = Modifier.padding(top = 8.dp))
+                Text("Most Helpful This Week: ${best.key} (${best.value} times)", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))
             }
-        }
     }
 }
 
 @Composable
 fun CommonQuestionCard(question: String, answer: String) {
     var expanded by remember { mutableStateOf(false) }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+    CareSectionCard(question) {
             Text(
-                text = "Q: $question",
+                text = "A simple answer is available when you tap below.",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryTeal
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = { expanded = !expanded }, colors = ButtonDefaults.buttonColors(containerColor = PrimaryTealLight)) {
+            Button(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth()) {
                 Text(if (expanded) "Hide answer" else "Show answer")
             }
             if (expanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("A: $answer", fontSize = 17.sp, color = Color.DarkGray)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text("You are safe. Take your time.", fontSize = 15.sp, color = PrimaryTeal)
+                Text("A: $answer", fontSize = 17.sp, color = MaterialTheme.colorScheme.onSurface)
+                Text("You are safe. Take your time.", fontSize = 15.sp, color = MaterialTheme.colorScheme.primary)
             }
-        }
     }
 }

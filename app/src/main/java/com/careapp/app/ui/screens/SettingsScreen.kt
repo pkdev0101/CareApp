@@ -99,7 +99,10 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
                 Column(Modifier.padding(16.dp)) {
                     Text("About CareApp", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                     Text("Version 1.0", color = TextGray)
-                    Text("A memory-care safety app for seniors and caregivers.", modifier = Modifier.padding(top = 4.dp))
+                    Text(
+                        "I was created to help seniors with memory loss feel safer and supported through reminders, routines, and trusted caregiver connections.",
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
         }

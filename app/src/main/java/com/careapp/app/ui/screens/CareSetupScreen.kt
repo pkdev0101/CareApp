@@ -39,6 +39,7 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
     var patientName by remember { mutableStateOf(patientProfileStore.load().name) }
     var patientAge by remember { mutableStateOf(patientProfileStore.load().age) }
     var patientDateOfBirth by remember { mutableStateOf(patientProfileStore.load().dateOfBirth) }
+    var patientPhotoUri by remember { mutableStateOf(patientProfileStore.load().photoUri) }
     var patientProfileMessage by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var detail by remember { mutableStateOf("") }
@@ -49,6 +50,10 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
     var savedMessage by remember { mutableStateOf("") }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         savedMessage = if (granted) "Medication reminders enabled." else "Notifications were not enabled. You can allow them in Android Settings."
+    }
+    val patientPhotoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        patientPhotoUri = uri?.toString()
+        patientProfileMessage = ""
     }
 
     fun open(type: String) {
@@ -68,6 +73,7 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
                 patientName = profile.name
                 patientAge = profile.age
                 patientDateOfBirth = profile.dateOfBirth
+                patientPhotoUri = profile.photoUri
                 patientProfileMessage = ""
                 showPatientProfileDialog = true
             }
@@ -100,6 +106,13 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("This information personalizes Senior Mode and helps caregivers confirm the right person.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    AnimatedPersonAvatar(patientName.ifBlank { "Patient" }, patientPhotoUri)
+                    Column(Modifier.weight(1f)) {
+                        Text(if (patientPhotoUri.isNullOrBlank()) "Initials placeholder" else "Patient photo selected", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        OutlinedButton(onClick = { patientPhotoLauncher.launch("image/*") }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Choose Photo") }
+                    }
+                }
                 OutlinedTextField(patientName, { patientName = it; patientProfileMessage = "" }, label = { Text("Patient name *") }, singleLine = true, isError = patientName.isBlank())
                 OutlinedTextField(patientAge, { patientAge = it.filter(Char::isDigit).take(3); patientProfileMessage = "" }, label = { Text("Age *") }, singleLine = true, isError = patientAge.isBlank())
                 OutlinedTextField(patientDateOfBirth, { patientDateOfBirth = it.take(10); patientProfileMessage = "" }, label = { Text("Date of birth (MM/DD/YYYY) *") }, placeholder = { Text("04/15/1945") }, singleLine = true, isError = patientDateOfBirth.isBlank())
@@ -112,7 +125,7 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
                 if (patientName.isBlank() || patientAge.toIntOrNull() == null || patientAge.toInt() !in 1..130 || !validDob) {
                     patientProfileMessage = "Enter a name, an age from 1 to 130, and a date in MM/DD/YYYY format."
                 } else {
-                    patientProfileStore.save(PatientProfileData(patientName.trim(), patientAge, patientDateOfBirth.trim()))
+                    patientProfileStore.save(PatientProfileData(patientName.trim(), patientAge, patientDateOfBirth.trim(), patientPhotoUri))
                     auditStore.record("Patient profile updated: ${patientName.trim()}")
                     patientProfileMessage = "Patient profile saved."
                     showPatientProfileDialog = false

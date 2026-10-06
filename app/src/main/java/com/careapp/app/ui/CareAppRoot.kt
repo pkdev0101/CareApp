@@ -7,6 +7,22 @@ import androidx.compose.foundation.background
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Assessment
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Emergency
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Medication
+import androidx.compose.material.icons.outlined.People
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.QrCode2
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.*
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -90,19 +106,21 @@ private fun getTopBarTitle(route: String?, isCaregiverMode: Boolean): String? = 
     else -> null
 }
 
-private fun getTopBarIcon(route: String?): String = when (route) {
-    CareAppScreen.Home.name -> "⌂"
-    CareAppScreen.Medication.name, CareAppScreen.MedicationHistory.name -> "✚"
-    CareAppScreen.Family.name -> "◉"
-    CareAppScreen.Routine.name -> "▦"
-    CareAppScreen.CaregiverNotes.name, CareAppScreen.DoctorSummary.name -> "▤"
-    CareAppScreen.Emergency.name -> "!"
-    CareAppScreen.Lost.name -> "⌖"
-    CareAppScreen.Help.name, CareAppScreen.CalmMode.name -> "?"
-    CareAppScreen.QRCode.name -> "▣"
-    CareAppScreen.Settings.name -> "⚙"
-    CareAppScreen.CareSetup.name -> "◆"
-    else -> "•"
+private fun getTopBarIcon(route: String?): ImageVector = when (route) {
+    CareAppScreen.Home.name -> Icons.Outlined.Home
+    CareAppScreen.Medication.name, CareAppScreen.MedicationHistory.name -> Icons.Outlined.Medication
+    CareAppScreen.Family.name -> Icons.Outlined.People
+    CareAppScreen.Routine.name -> Icons.Outlined.CalendarMonth
+    CareAppScreen.CaregiverNotes.name -> Icons.Outlined.EditNote
+    CareAppScreen.DoctorSummary.name -> Icons.Outlined.Assessment
+    CareAppScreen.Emergency.name -> Icons.Outlined.Emergency
+    CareAppScreen.Lost.name -> Icons.Outlined.LocationOn
+    CareAppScreen.Help.name -> Icons.Outlined.HelpOutline
+    CareAppScreen.CalmMode.name -> Icons.Outlined.Psychology
+    CareAppScreen.QRCode.name -> Icons.Outlined.QrCode2
+    CareAppScreen.Settings.name -> Icons.Outlined.Settings
+    CareAppScreen.CareSetup.name -> Icons.Outlined.Tune
+    else -> Icons.Outlined.Info
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -158,7 +176,7 @@ fun CareAppRoot() {
         val currentRoute = navBackStackEntry?.destination?.route
         val detailRoute = currentRoute in setOf(
             CareAppScreen.MedicationHistory.name, CareAppScreen.CareSnapshot.name,
-            CareAppScreen.DoctorSummary.name, CareAppScreen.DemoMode.name, CareAppScreen.QRCode.name,
+            CareAppScreen.DemoMode.name, CareAppScreen.QRCode.name,
             CareAppScreen.CareSetup.name, CareAppScreen.ManageMedications.name, CareAppScreen.ManagePeople.name,
             CareAppScreen.ManageRoutines.name, CareAppScreen.ManagePlaces.name
             ,CareAppScreen.EmergencyProfile.name
@@ -188,15 +206,11 @@ fun CareAppRoot() {
                                     color = MaterialTheme.colorScheme.primaryContainer
                                 ) {
                                     Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-                                        Text(
-                                            when (currentRoute) {
-                                                CareAppScreen.Help.name -> "!"
-                                                CareAppScreen.CalmMode.name -> "?"
-                                                else -> getTopBarIcon(currentRoute)
-                                            },
-                                            fontSize = 17.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        Icon(
+                                            imageVector = getTopBarIcon(currentRoute),
+                                            contentDescription = getTopBarTitle(currentRoute, isCaregiverMode),
+                                            modifier = Modifier.size(18.dp),
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                     }
                                 }
@@ -336,11 +350,6 @@ fun CareAppRoot() {
                             else if (hasPin) "Enter the 4–6 digit PIN to open caregiver tools."
                             else "Create a 4–6 digit PIN. Caregiver Mode manages medication and safety information."
                         )
-                        if (hasPin) {
-                            Text("Temporary demo PIN display — hide or remove before production use.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-                            Text("Supervisor PIN: ${caregiverPinStore.supervisorPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                            Text("Caregiver PIN: ${caregiverPinStore.caregiverPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                        }
                         if (!showSupervisorReset) {
                             OutlinedTextField(
                                 value = caregiverPin,
@@ -414,7 +423,7 @@ fun CareAppRoot() {
     }
 }
 
-data class NavBarItem(val screen: CareAppScreen, val emoji: String, val label: String)
+data class NavBarItem(val screen: CareAppScreen, val icon: ImageVector, val label: String)
 
 @Composable
 fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = false) {
@@ -427,34 +436,21 @@ fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = fa
             .height(82.dp),
         containerColor = PrimaryTeal
     ) {
-        val legacyScreens = if (isCaregiverMode) {
-            listOf(
-                NavBarItem(CareAppScreen.Routine, "▦", "Routine"),
-                NavBarItem(CareAppScreen.Medication, "💊", "Medicine"),
-                NavBarItem(CareAppScreen.CaregiverNotes, "📝", "Notes"),
-                NavBarItem(CareAppScreen.DoctorSummary, "📋", "Report"),
-                NavBarItem(CareAppScreen.Settings, "⚙️", "Settings")
-            )
-        } else {
-            listOf(
-                NavBarItem(CareAppScreen.Home, "🏠", "Home"),
-                NavBarItem(CareAppScreen.Medication, "💊", "Medicine"),
-                NavBarItem(CareAppScreen.Family, "👨‍👩‍👧", "People"),
-                NavBarItem(CareAppScreen.CalmMode, "🫶", "I Forgot"),
-                NavBarItem(CareAppScreen.Emergency, "🆘", "Emergency"),
-                NavBarItem(CareAppScreen.Lost, "📍", "Lost")
-            )
-        }
-
         val screens = if (isCaregiverMode) {
-            legacyScreens
+            listOf(
+                NavBarItem(CareAppScreen.Routine, getTopBarIcon(CareAppScreen.Routine.name), "Routine"),
+                NavBarItem(CareAppScreen.Medication, getTopBarIcon(CareAppScreen.Medication.name), "Medicine"),
+                NavBarItem(CareAppScreen.CaregiverNotes, getTopBarIcon(CareAppScreen.CaregiverNotes.name), "Notes"),
+                NavBarItem(CareAppScreen.DoctorSummary, getTopBarIcon(CareAppScreen.DoctorSummary.name), "Report"),
+                NavBarItem(CareAppScreen.Settings, getTopBarIcon(CareAppScreen.Settings.name), "Settings")
+            )
         } else {
             listOf(
-                NavBarItem(CareAppScreen.Home, "⌂", "Home"),
-                NavBarItem(CareAppScreen.Medication, "M", "Medicine"),
-                NavBarItem(CareAppScreen.Family, "P", "People"),
-                NavBarItem(CareAppScreen.CalmMode, "?", "I Forgot"),
-                NavBarItem(CareAppScreen.Help, "!", "Help")
+                NavBarItem(CareAppScreen.Home, getTopBarIcon(CareAppScreen.Home.name), "Home"),
+                NavBarItem(CareAppScreen.Medication, getTopBarIcon(CareAppScreen.Medication.name), "Medicine"),
+                NavBarItem(CareAppScreen.Family, getTopBarIcon(CareAppScreen.Family.name), "People"),
+                NavBarItem(CareAppScreen.CalmMode, getTopBarIcon(CareAppScreen.CalmMode.name), "I Forgot"),
+                NavBarItem(CareAppScreen.Help, getTopBarIcon(CareAppScreen.Help.name), "Help")
             )
         }
 
@@ -465,9 +461,10 @@ fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = fa
 
             NavigationBarItem(
                 icon = {
-                    Text(
-                        text = item.emoji,
-                        fontSize = 22.sp
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = item.label,
+                        modifier = Modifier.size(22.dp)
                     )
                 },
                 label = {

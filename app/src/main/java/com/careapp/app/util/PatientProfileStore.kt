@@ -6,7 +6,8 @@ import com.careapp.app.data.SampleData
 data class PatientProfileData(
     val name: String,
     val age: String,
-    val dateOfBirth: String
+    val dateOfBirth: String,
+    val photoUri: String? = null
 )
 
 class PatientProfileStore(context: Context) {
@@ -18,7 +19,8 @@ class PatientProfileStore(context: Context) {
         return PatientProfileData(
             name = preferences.getString("patient_name", null).orEmpty().ifBlank { defaultProfile.preferredName },
             age = preferences.getString("patient_age", null).orEmpty().ifBlank { calculateAge(defaultProfile.birthday) },
-            dateOfBirth = preferences.getString("patient_dob", null).orEmpty().ifBlank { defaultProfile.birthday }
+            dateOfBirth = preferences.getString("patient_dob", null).orEmpty().ifBlank { defaultProfile.birthday },
+            photoUri = preferences.getString("patient_photo_uri", null)?.takeIf { it.isNotBlank() }
         )
     }
 
@@ -27,6 +29,7 @@ class PatientProfileStore(context: Context) {
             .putString("patient_name", profile.name.trim())
             .putString("patient_age", profile.age.trim())
             .putString("patient_dob", profile.dateOfBirth.trim())
+            .putString("patient_photo_uri", profile.photoUri.orEmpty())
             .apply()
     }
 
