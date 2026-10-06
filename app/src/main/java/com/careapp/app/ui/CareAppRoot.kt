@@ -1,6 +1,7 @@
 package com.careapp.app.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.animation.EnterTransition
@@ -127,6 +128,7 @@ fun CareAppRoot() {
     var showCaregiverPin by remember { mutableStateOf(false) }
     var showSupervisorPin by remember { mutableStateOf(false) }
     var showReplacementPin by remember { mutableStateOf(false) }
+    var careAppTitleTaps by remember { mutableIntStateOf(0) }
 
     CareAppTheme(
         darkTheme = when (themeMode) {
@@ -190,7 +192,21 @@ fun CareAppRoot() {
                                     }
                                 }
                                 Spacer(Modifier.width(6.dp))
-                                Text("CareApp", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(
+                                    "CareApp",
+                                    modifier = Modifier.clickable {
+                                        if (isCaregiverMode) {
+                                            careAppTitleTaps++
+                                            if (careAppTitleTaps >= 10) {
+                                                careAppTitleTaps = 0
+                                                navController.navigate(CareAppScreen.DemoMode.name)
+                                            }
+                                        }
+                                    },
+                                    fontSize = 19.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                             }
                             val section = getTopBarTitle(currentRoute, isCaregiverMode)
                             if (section != null && section != "CareApp") {

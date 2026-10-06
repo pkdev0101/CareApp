@@ -1,6 +1,5 @@
 package com.careapp.app.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,7 +28,6 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
     val context = LocalContext.current
     val pinStore = remember { CaregiverPinStore(context) }
     val auditStore = remember { CaregiverAuditStore(context) }
-    var aboutTaps by remember { mutableIntStateOf(0) }
     var showPinDialog by remember { mutableStateOf(false) }
     var currentPin by remember { mutableStateOf("") }
     var newPin by remember { mutableStateOf("") }
@@ -93,13 +91,7 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         item { SectionLabel("About") }
         item {
             Card(
-                modifier = Modifier.fillMaxWidth().clickable {
-                    aboutTaps++
-                    if (aboutTaps >= 5 && isCaregiverMode) {
-                        aboutTaps = 0
-                        navController?.navigate(CareAppScreen.DemoMode.name)
-                    }
-                },
+                modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -108,11 +100,10 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
                     Text("About CareApp", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                     Text("Version 1.0", color = TextGray)
                     Text("A memory-care safety app for seniors and caregivers.", modifier = Modifier.padding(top = 4.dp))
-                    if (isCaregiverMode && aboutTaps in 1..4) Text("Demo Mode: $aboutTaps/5 taps", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
                 }
             }
         }
-        item { Text("Caregivers can open Demo Mode by tapping About CareApp five times.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item { Text("Caregivers can open Demo Mode by tapping the CareApp title in the top-left corner 10 times.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
     if (showPinDialog) AlertDialog(
         onDismissRequest = { showPinDialog = false },
