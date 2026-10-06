@@ -23,6 +23,8 @@ import com.careapp.app.data.repository.CareRepository
 import com.careapp.app.util.NotificationHelper
 import com.careapp.app.util.CaregiverAuditStore
 import com.careapp.app.util.MedicationReminderPreferences
+import com.careapp.app.util.PatientProfileData
+import com.careapp.app.util.PatientProfileStore
 import kotlinx.coroutines.launch
 
 @Composable
@@ -30,8 +32,14 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
     val context = LocalContext.current
     val auditStore = remember { CaregiverAuditStore(context) }
     val reminderPreferences = remember { MedicationReminderPreferences(context) }
+    val patientProfileStore = remember { PatientProfileStore(context) }
     val scope = rememberCoroutineScope()
     var dialog by remember { mutableStateOf<String?>(null) }
+    var showPatientProfileDialog by remember { mutableStateOf(false) }
+    var patientName by remember { mutableStateOf(patientProfileStore.load().name) }
+    var patientAge by remember { mutableStateOf(patientProfileStore.load().age) }
+    var patientDateOfBirth by remember { mutableStateOf(patientProfileStore.load().dateOfBirth) }
+    var patientProfileMessage by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var detail by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("") }
@@ -54,6 +62,16 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
 
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)) {
         item { Text("Care Setup", style = MaterialTheme.typography.headlineMedium); Text("Caregivers enter the information Senior Mode uses.", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 12.dp)) }
+        item {
+            val profile = patientProfileStore.load()
+            SetupCard("Patient Profile", "Name, age, and date of birth used throughout Senior Mode") {
+                patientName = profile.name
+                patientAge = profile.age
+                patientDateOfBirth = profile.dateOfBirth
+                patientProfileMessage = ""
+                showPatientProfileDialog = true
+            }
+        }
         item { SetupCard("Caregiver Identity & Security Code", "Required before changes are logged") { open("identity") } }
         item {
             Card(Modifier.fillMaxWidth().padding(vertical = 5.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -75,6 +93,34 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
         item { SetupCard("App Preferences", "Text size, contrast, dark mode, and mode switching") { navController?.navigate(com.careapp.app.ui.CareAppScreen.Settings.name) } }
         if (savedMessage.isNotBlank()) item { Text(savedMessage, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 12.dp)) }
     }
+
+    if (showPatientProfileDialog) AlertDialog(
+        onDismissRequest = { showPatientProfileDialog = false },
+        title = { Text("Patient Profile") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("This information personalizes Senior Mode and helps caregivers confirm the right person.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(patientName, { patientName = it; patientProfileMessage = "" }, label = { Text("Patient name *") }, singleLine = true, isError = patientName.isBlank())
+                OutlinedTextField(patientAge, { patientAge = it.filter(Char::isDigit).take(3); patientProfileMessage = "" }, label = { Text("Age *") }, singleLine = true, isError = patientAge.isBlank())
+                OutlinedTextField(patientDateOfBirth, { patientDateOfBirth = it.take(10); patientProfileMessage = "" }, label = { Text("Date of birth (MM/DD/YYYY) *") }, placeholder = { Text("04/15/1945") }, singleLine = true, isError = patientDateOfBirth.isBlank())
+                if (patientProfileMessage.isNotBlank()) Text(patientProfileMessage, color = MaterialTheme.colorScheme.error)
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                val validDob = patientDateOfBirth.matches(Regex("\\d{2}/\\d{2}/\\d{4}"))
+                if (patientName.isBlank() || patientAge.toIntOrNull() == null || patientAge.toInt() !in 1..130 || !validDob) {
+                    patientProfileMessage = "Enter a name, an age from 1 to 130, and a date in MM/DD/YYYY format."
+                } else {
+                    patientProfileStore.save(PatientProfileData(patientName.trim(), patientAge, patientDateOfBirth.trim()))
+                    auditStore.record("Patient profile updated: ${patientName.trim()}")
+                    patientProfileMessage = "Patient profile saved."
+                    showPatientProfileDialog = false
+                }
+            }) { Text("Save Profile") }
+        },
+        dismissButton = { TextButton(onClick = { showPatientProfileDialog = false }) { Text("Cancel") } }
+    )
 
     dialog?.let { type ->
         val title = when (type) { "identity" -> "Caregiver Identity"; "medication" -> "Add Medication"; "person" -> "Add Person"; "routine" -> "Add Routine Step"; "place" -> "Add Place"; else -> "Emergency Profile" }

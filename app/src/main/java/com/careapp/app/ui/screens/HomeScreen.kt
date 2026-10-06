@@ -24,7 +24,9 @@ import com.careapp.app.ui.components.LargeButton
 import com.careapp.app.ui.components.AdherenceWidget
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.DashboardViewModel
+import com.careapp.app.util.PatientProfileStore
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.TextStyle
 import java.util.*
 
@@ -32,7 +34,14 @@ import java.util.*
 fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewModel? = null) {
     val senior = SampleData.seniorProfile
     val context = androidx.compose.ui.platform.LocalContext.current
+    val patientProfile = remember { PatientProfileStore(context).load() }
     val today = LocalDate.now()
+    val greeting = when (LocalTime.now().hour) {
+        in 5..11 -> "Good morning"
+        in 12..17 -> "Good afternoon"
+        in 18..21 -> "Good evening"
+        else -> "Good night"
+    }
     val dayName = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
     val monthDay = "${today.monthValue.toString().padStart(2, '0')}/${today.dayOfMonth.toString().padStart(2, '0')}/${today.year}"
 
@@ -55,7 +64,7 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
         // Welcome
         item {
             Text(
-                text = "Good morning, ${senior.preferredName}.",
+                text = "$greeting, ${patientProfile.name}.",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryTeal,
