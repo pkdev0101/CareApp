@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -92,7 +94,7 @@ fun CareManagementScreen(type: CareManagementType, repository: CareRepository) {
 }
 
 @Composable private fun EditorDialog(title: String, valid: Boolean, error: String, onDismiss: () -> Unit, onSave: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = { Column(Modifier.heightIn(max = 430.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content) }, confirmButton = { Button(onClick = onSave, enabled = valid) { Text("Save") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = { Column(Modifier.heightIn(max = 500.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp), content = content) }, confirmButton = { Button(onClick = onSave, enabled = valid) { Text("Save") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
 }
 
 @Composable private fun MedicationEditor(existing: Medication?, repository: CareRepository, prefs: MedicationReminderPreferences, context: android.content.Context, audit: CaregiverAuditStore, done: () -> Unit) {
@@ -116,8 +118,8 @@ fun CareManagementScreen(type: CareManagementType, repository: CareRepository) {
             Box { OutlinedTextField(time, {}, readOnly = true, label = { Text("Time *") }, placeholder = { Text("Choose a 15-minute time slot") }, trailingIcon = { TextButton(onClick = { expanded = true }) { Text("Choose") } }, modifier = Modifier.fillMaxWidth()); DropdownMenu(expanded, { expanded = false }, modifier = Modifier.heightIn(max = 300.dp)) { medicationTimeSlots().forEach { DropdownMenuItem(text = { Text(it) }, onClick = { time = it; expanded = false }) } } }
             Text("Repeat interval *", style = MaterialTheme.typography.labelLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.weight(1f)) { OutlinedTextField("$intervalHours hr", {}, readOnly = true, label = { Text("Hours") }, trailingIcon = { TextButton(onClick = { hoursExpanded = true }) { Text("Choose") } }, modifier = Modifier.fillMaxWidth()); DropdownMenu(hoursExpanded, { hoursExpanded = false }) { (0..24).forEach { hour -> DropdownMenuItem(text = { Text("$hour hour${if (hour == 1) "" else "s"}") }, onClick = { intervalHours = hour; hoursExpanded = false }) } } }
-                Box(Modifier.weight(1f)) { OutlinedTextField("$intervalMinutes min", {}, readOnly = true, label = { Text("Minutes") }, trailingIcon = { TextButton(onClick = { minutesExpanded = true }) { Text("Choose") } }, modifier = Modifier.fillMaxWidth()); DropdownMenu(minutesExpanded, { minutesExpanded = false }) { listOf(0, 15, 30, 45).forEach { minute -> DropdownMenuItem(text = { Text("$minute minutes") }, onClick = { intervalMinutes = minute; minutesExpanded = false }) } } }
+                Box(Modifier.weight(1f)) { OutlinedButton(onClick = { hoursExpanded = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("$intervalHours hour${if (intervalHours == 1) "" else "s"}") }; DropdownMenu(hoursExpanded, { hoursExpanded = false }) { (0..24).forEach { hour -> DropdownMenuItem(text = { Text("$hour hour${if (hour == 1) "" else "s"}") }, onClick = { intervalHours = hour; hoursExpanded = false }) } } }
+                Box(Modifier.weight(1f)) { OutlinedButton(onClick = { minutesExpanded = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("$intervalMinutes min") }; DropdownMenu(minutesExpanded, { minutesExpanded = false }) { listOf(0, 15, 30, 45).forEach { minute -> DropdownMenuItem(text = { Text("$minute minutes") }, onClick = { intervalMinutes = minute; minutesExpanded = false }) } } }
             }
             Text("Schedule preview: ${medicationScheduleText(name = time, frequencyMinutes = frequency)}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
