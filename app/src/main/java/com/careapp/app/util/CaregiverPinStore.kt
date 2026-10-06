@@ -8,8 +8,22 @@ class CaregiverPinStore(context: Context) {
     fun hasPin(): Boolean = !preferences.getString("caregiver_pin", null).isNullOrBlank()
 
     fun setPin(pin: String) {
-        preferences.edit().putString("caregiver_pin", pin).apply()
+        val editor = preferences.edit().putString("caregiver_pin", pin)
+        if (preferences.getString("supervisor_pin", null).isNullOrBlank()) {
+            editor.putString("supervisor_pin", pin)
+        }
+        editor.apply()
     }
 
     fun matches(pin: String): Boolean = preferences.getString("caregiver_pin", null) == pin
+
+    fun setCaregiverPin(pin: String) {
+        preferences.edit().putString("caregiver_pin", pin).apply()
+    }
+
+    fun matchesSupervisor(pin: String): Boolean {
+        val supervisorPin = preferences.getString("supervisor_pin", null)
+            ?: preferences.getString("caregiver_pin", null)
+        return supervisorPin == pin
+    }
 }

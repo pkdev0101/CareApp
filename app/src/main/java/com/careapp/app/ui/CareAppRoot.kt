@@ -38,6 +38,7 @@ import com.careapp.app.ui.theme.CareAppTheme
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.*
 import com.careapp.app.util.CaregiverPinStore
+import com.careapp.app.util.CaregiverAuditStore
 import com.careapp.app.util.MedicationReminderPreferences
 import com.careapp.app.util.NotificationHelper
 
@@ -113,9 +114,14 @@ fun CareAppRoot() {
     val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory(context))
     val themeMode by themeViewModel.themeMode.collectAsState()
     val caregiverPinStore = remember { CaregiverPinStore(context) }
+    val caregiverAuditStore = remember { CaregiverAuditStore(context) }
     var showCaregiverPinDialog by remember { mutableStateOf(false) }
     var caregiverPin by remember { mutableStateOf("") }
     var caregiverPinError by remember { mutableStateOf("") }
+    var caregiverPinAttempts by remember { mutableIntStateOf(0) }
+    var showSupervisorReset by remember { mutableStateOf(false) }
+    var supervisorPin by remember { mutableStateOf("") }
+    var replacementCaregiverPin by remember { mutableStateOf("") }
 
     CareAppTheme(
         darkTheme = when (themeMode) {
@@ -203,6 +209,10 @@ fun CareAppRoot() {
                                 } else {
                                     caregiverPin = ""
                                     caregiverPinError = ""
+                                    caregiverPinAttempts = 0
+                                    showSupervisorReset = false
+                                    supervisorPin = ""
+                                    replacementCaregiverPin = ""
                                     showCaregiverPinDialog = true
                                 }
                             },
@@ -294,25 +304,64 @@ fun CareAppRoot() {
             val hasPin = caregiverPinStore.hasPin()
             AlertDialog(
                 onDismissRequest = { showCaregiverPinDialog = false },
-                title = { Text(if (hasPin) "Enter Caregiver PIN" else "Create Caregiver PIN") },
+                title = { Text(if (showSupervisorReset) "Supervisor PIN Override" else if (hasPin) "Enter Caregiver PIN" else "Create Caregiver PIN") },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(if (hasPin) "Enter the 4–6 digit PIN to open caregiver tools." else "Create a 4–6 digit PIN. Caregiver Mode manages medication and safety information.")
-                        OutlinedTextField(
-                            value = caregiverPin,
-                            onValueChange = { value -> caregiverPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
-                            label = { Text("PIN") },
-                            singleLine = true
+                        Text(
+                            if (showSupervisorReset) "Use the supervisor PIN below to reset caregiver access."
+                            else if (hasPin) "Enter the 4–6 digit PIN to open caregiver tools."
+                            else "Create a 4–6 digit PIN. Caregiver Mode manages medication and safety information."
                         )
+                        if (!showSupervisorReset) {
+                            OutlinedTextField(
+                                value = caregiverPin,
+                                onValueChange = { value -> caregiverPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
+                                label = { Text("PIN") },
+                                singleLine = true
+                            )
+                        }
+                        if (showSupervisorReset) {
+                            Text("Three caregiver PIN attempts failed. Enter the supervisor PIN to set a new caregiver PIN.")
+                            OutlinedTextField(
+                                value = supervisorPin,
+                                onValueChange = { value -> supervisorPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
+                                label = { Text("Supervisor PIN") },
+                                singleLine = true
+                            )
+                            OutlinedTextField(
+                                value = replacementCaregiverPin,
+                                onValueChange = { value -> replacementCaregiverPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
+                                label = { Text("New caregiver PIN") },
+                                singleLine = true
+                            )
+                        } else if (hasPin && caregiverPinAttempts > 0) {
+                            Text("Attempts: $caregiverPinAttempts of 3", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                        }
                         if (caregiverPinError.isNotBlank()) Text(caregiverPinError, color = DangerRed, fontSize = 13.sp)
                     }
                 },
                 confirmButton = {
                     Button(onClick = {
-                        if (caregiverPin.length !in 4..6) {
+                        if (showSupervisorReset) {
+                            when {
+                                !caregiverPinStore.matchesSupervisor(supervisorPin) -> caregiverPinError = "That supervisor PIN does not match."
+                                replacementCaregiverPin.length !in 4..6 -> caregiverPinError = "New PIN must contain 4 to 6 digits."
+                                else -> {
+                                    caregiverPinStore.setCaregiverPin(replacementCaregiverPin)
+                                    caregiverAuditStore.record("Caregiver PIN reset by supervisor override")
+                                    showCaregiverPinDialog = false
+                                }
+                            }
+                        } else if (caregiverPin.length !in 4..6) {
                             caregiverPinError = "PIN must contain 4 to 6 digits."
                         } else if (hasPin && !caregiverPinStore.matches(caregiverPin)) {
-                            caregiverPinError = "That PIN does not match."
+                            caregiverPinAttempts++
+                            if (caregiverPinAttempts >= 3) {
+                                showSupervisorReset = true
+                                caregiverPinError = "Use the supervisor PIN to reset caregiver access."
+                            } else {
+                                caregiverPinError = "That PIN does not match."
+                            }
                         } else {
                             if (!hasPin) caregiverPinStore.setPin(caregiverPin)
                             showCaregiverPinDialog = false
@@ -322,7 +371,7 @@ fun CareAppRoot() {
                                 launchSingleTop = true
                             }
                         }
-                    }) { Text(if (hasPin) "Unlock Caregiver Mode" else "Save PIN and Continue") }
+                    }) { Text(if (showSupervisorReset) "Reset Caregiver PIN" else if (hasPin) "Unlock Caregiver Mode" else "Save PIN and Continue") }
                 },
                 dismissButton = { TextButton(onClick = { showCaregiverPinDialog = false }) { Text("Cancel") } }
             )
