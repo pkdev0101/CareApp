@@ -7,6 +7,12 @@ import com.careapp.app.data.Medication
 class MedicationReminderPreferences(context: Context) {
     private val preferences = context.getSharedPreferences("medication_reminder_preferences", Context.MODE_PRIVATE)
 
+    fun isGloballyEnabled(): Boolean = preferences.getBoolean("global_enabled", true)
+
+    fun setGloballyEnabled(enabled: Boolean) {
+        preferences.edit().putBoolean("global_enabled", enabled).apply()
+    }
+
     fun isEnabled(medication: Medication): Boolean =
         if (preferences.contains(key(medication))) preferences.getBoolean(key(medication), false) else true
 

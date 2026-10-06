@@ -101,6 +101,16 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
     }
 
+    fun showTestMedicationReminder(context: Context, medicationName: String = "Test medication") {
+        createNotificationChannels(context)
+        runCatching {
+            androidx.core.app.NotificationManagerCompat.from(context).notify(
+                9001,
+                buildMedicationNotification(context, medicationName, "now").setContentText("Reminder test: $medicationName").build()
+            )
+        }
+    }
+
     fun buildEmergencyNotification(
         context: Context,
         title: String,

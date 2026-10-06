@@ -35,7 +35,7 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
     var name by remember { mutableStateOf("") }
     var detail by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("") }
-    var reminderRequired by remember { mutableStateOf(false) }
+    var remindersEnabled by remember { mutableStateOf(reminderPreferences.isGloballyEnabled()) }
     var timeMenuExpanded by remember { mutableStateOf(false) }
     var validationMessage by remember { mutableStateOf("") }
     var savedMessage by remember { mutableStateOf("") }
@@ -48,7 +48,6 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
         name = ""
         detail = ""
         time = ""
-        reminderRequired = false
         timeMenuExpanded = false
         validationMessage = ""
     }
@@ -57,10 +56,15 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
         item { Text("Care Setup", style = MaterialTheme.typography.headlineMedium); Text("Caregivers enter the information Senior Mode uses.", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 12.dp)) }
         item { SetupCard("Caregiver Identity & Security Code", "Required before changes are logged") { open("identity") } }
         item {
-            SetupCard("Medication Reminders", "Enable daily notifications for scheduled medications") {
-                if (Build.VERSION.SDK_INT >= 33) notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                else savedMessage = "Medication reminders enabled."
-                scope.launch { repository.getAllMedicationsSync().forEach { if (reminderPreferences.isEnabled(it)) NotificationHelper.scheduleMedicationReminder(context, it) } }
+            Card(Modifier.fillMaxWidth().padding(vertical = 5.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) { Text("Medication Reminders", style = MaterialTheme.typography.titleLarge); Text(if (remindersEnabled) "Enabled for all scheduled medications" else "Disabled", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        Switch(checked = remindersEnabled, onCheckedChange = { enabled -> remindersEnabled = enabled; reminderPreferences.setGloballyEnabled(enabled); scope.launch { repository.getAllMedicationsSync().forEach { if (enabled) NotificationHelper.scheduleMedicationReminder(context, it) else NotificationHelper.cancelMedicationReminder(context, it) } }; if (enabled && Build.VERSION.SDK_INT >= 33) notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS); savedMessage = if (enabled) "Medication reminders enabled." else "Medication reminders disabled." })
+                    }
+                    Text("Reminders use each medication's start time and interval.", style = MaterialTheme.typography.bodyMedium)
+                    OutlinedButton(onClick = { if (Build.VERSION.SDK_INT >= 33) notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS); NotificationHelper.showTestMedicationReminder(context); savedMessage = "Test reminder sent. Check the device notification shade." }, modifier = Modifier.fillMaxWidth()) { Text("Send Test Reminder") }
+                }
             }
         }
         item { SetupCard("Manage Medications", "Add, edit, remove, and schedule medications") { navController?.navigate(com.careapp.app.ui.CareAppScreen.ManageMedications.name) } }
@@ -110,11 +114,7 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
                                 }
                             }
                         }
-                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                            Checkbox(checked = reminderRequired, onCheckedChange = { reminderRequired = it })
-                            Text("Require a notification reminder", style = MaterialTheme.typography.bodyLarge)
-                        }
-                        Text("The reminder appears on this device at the selected time. It does not recommend a dose.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Reminders are controlled globally in Care Setup. This medication will follow that setting.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else if (type == "routine") {
                         OutlinedTextField(detail, { detail = it; validationMessage = "" }, label = { Text("Time/category * (e.g. Morning 8:30 AM)") }, isError = detail.isBlank())
                     } else {
@@ -136,8 +136,8 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
                             "medication" -> {
                                 val medication = Medication(name = name, dose = detail, scheduledTime = time, instructions = detail, pillDescription = "", reason = "", doctor = "")
                                 val savedMedication = repository.insertMedication(medication)
-                                reminderPreferences.setEnabled(savedMedication, reminderRequired)
-                                if (reminderRequired) NotificationHelper.scheduleMedicationReminder(context, savedMedication)
+                                reminderPreferences.setEnabled(savedMedication, true)
+                                if (reminderPreferences.isGloballyEnabled()) NotificationHelper.scheduleMedicationReminder(context, savedMedication)
                                 else NotificationHelper.cancelMedicationReminder(context, savedMedication)
                                 auditStore.record("Medication entered: ${medication.name}")
                             }

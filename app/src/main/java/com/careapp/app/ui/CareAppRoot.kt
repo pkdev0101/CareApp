@@ -131,7 +131,7 @@ fun CareAppRoot() {
         LaunchedEffect(repository) {
             repository.seedIfNeeded()
             repository.getAllMedicationsSync().forEach {
-                if (reminderPreferences.isEnabled(it)) NotificationHelper.scheduleMedicationReminder(context, it)
+                if (reminderPreferences.isGloballyEnabled()) NotificationHelper.scheduleMedicationReminder(context, it)
             }
         }
         val medViewModel: MedicationViewModel = viewModel(factory = MedicationViewModelFactory(repository))
