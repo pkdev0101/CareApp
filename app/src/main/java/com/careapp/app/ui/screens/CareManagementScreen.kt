@@ -1,5 +1,7 @@
 package com.careapp.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
@@ -102,7 +104,54 @@ fun CareManagementScreen(type: CareManagementType, repository: CareRepository) {
     }
 }
 
-@Composable private fun PersonEditor(existing: MemoryCard?, repository: CareRepository, audit: CaregiverAuditStore, done: () -> Unit) { val scope = rememberCoroutineScope(); var name by remember { mutableStateOf(existing?.name ?: "") }; var relationship by remember { mutableStateOf(existing?.relationship ?: "") }; var phone by remember { mutableStateOf(existing?.phone ?: "") }; var notes by remember { mutableStateOf(existing?.memoryCue ?: "") }; var error by remember { mutableStateOf("") }; EditorDialog(if (existing == null) "Add Person" else "Edit Person", name.isNotBlank() && relationship.isNotBlank() && phone.isNotBlank(), error, done, { if (name.isBlank() || relationship.isBlank() || phone.isBlank()) error = "Name, relationship, and phone are required." else scope.launch { val saved = MemoryCard(existing?.id ?: 0, name.trim(), relationship.trim(), notes.trim(), existing?.helpsWith ?: "", phone.trim(), existing?.photoUri); if (existing == null) repository.insertMemoryCard(saved) else repository.updateMemoryCard(saved); audit.record("Person ${if (existing == null) "added" else "updated"}: ${saved.name}"); done() } }) { OutlinedTextField(name, { name = it }, label = { Text("Name *") }, singleLine = true); OutlinedTextField(relationship, { relationship = it }, label = { Text("Relationship *") }, singleLine = true); OutlinedTextField(phone, { phone = it }, label = { Text("Phone *") }, singleLine = true); OutlinedTextField(notes, { notes = it }, label = { Text("Memory cue") }) } }
+@Composable
+private fun PersonEditor(existing: MemoryCard?, repository: CareRepository, audit: CaregiverAuditStore, done: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var name by remember { mutableStateOf(existing?.name ?: "") }
+    var relationship by remember { mutableStateOf(existing?.relationship ?: "") }
+    var phone by remember { mutableStateOf(existing?.phone ?: "") }
+    var notes by remember { mutableStateOf(existing?.memoryCue ?: "") }
+    var photoUri by remember { mutableStateOf(existing?.photoUri) }
+    var error by remember { mutableStateOf("") }
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            photoUri = uri.toString()
+        }
+    }
+    EditorDialog(
+        if (existing == null) "Add Person" else "Edit Person",
+        name.isNotBlank() && relationship.isNotBlank() && phone.isNotBlank(),
+        error,
+        done,
+        {
+            if (name.isBlank() || relationship.isBlank() || phone.isBlank()) {
+                error = "Name, relationship, and phone are required."
+            } else scope.launch {
+                val saved = MemoryCard(existing?.id ?: 0, name.trim(), relationship.trim(), notes.trim(), existing?.helpsWith ?: "", phone.trim(), photoUri)
+                if (existing == null) repository.insertMemoryCard(saved) else repository.updateMemoryCard(saved)
+                audit.record("Person ${if (existing == null) "added" else "updated"}: ${saved.name}")
+                done()
+            }
+        }
+    ) {
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            AnimatedPersonAvatar(name.ifBlank { "Person" }, photoUri)
+            Column {
+                Text(if (photoUri == null) "Initials placeholder" else "Photo selected", style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = { photoPicker.launch(arrayOf("image/*")) }) { Text("Choose photo") }
+                if (photoUri != null) TextButton(onClick = { photoUri = null }) { Text("Use initials instead") }
+            }
+        }
+        OutlinedTextField(name, { name = it }, label = { Text("Name *") }, singleLine = true)
+        OutlinedTextField(relationship, { relationship = it }, label = { Text("Relationship *") }, singleLine = true)
+        OutlinedTextField(phone, { phone = it }, label = { Text("Phone *") }, singleLine = true)
+        OutlinedTextField(notes, { notes = it }, label = { Text("Memory cue") })
+    }
+}
 
 @Composable private fun RoutineEditor(existing: RoutineTask?, repository: CareRepository, audit: CaregiverAuditStore, done: () -> Unit) { val scope = rememberCoroutineScope(); var title by remember { mutableStateOf(existing?.title ?: "") }; var category by remember { mutableStateOf(existing?.category ?: "Morning") }; var time by remember { mutableStateOf(existing?.suggestedTime ?: "") }; var error by remember { mutableStateOf("") }; EditorDialog(if (existing == null) "Add Routine" else "Edit Routine", title.isNotBlank() && category.isNotBlank() && time.isNotBlank(), error, done, { if (title.isBlank() || category.isBlank() || time.isBlank()) error = "Routine name, part of day, and time are required." else scope.launch { val saved = RoutineTask(existing?.id ?: 0, title.trim(), category.trim(), time.trim(), existing?.completed ?: false, existing?.completedTime, existing?.notes ?: ""); if (existing == null) repository.insertRoutineTask(saved) else repository.updateRoutineTask(saved); audit.record("Routine ${if (existing == null) "added" else "updated"}: ${saved.title}"); done() } }) { OutlinedTextField(title, { title = it }, label = { Text("Routine name *") }, singleLine = true); OutlinedTextField(category, { category = it }, label = { Text("Morning / Afternoon / Evening *") }, singleLine = true); OutlinedTextField(time, { time = it }, label = { Text("Suggested time *") }, singleLine = true) } }
 
