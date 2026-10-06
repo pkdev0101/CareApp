@@ -1,6 +1,7 @@
 package com.careapp.app.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
@@ -47,13 +48,13 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
                     navController?.navigate(CareAppScreen.CareSetup.name)
                 }
             }
-            item { Text("The top-right mode button returns to Senior Mode and takes you back to Home.", fontSize = 14.sp, color = TextGray) }
-            item { SettingsActionCard("Change Caregiver PIN", "Requires the current master PIN. The new PIN must contain 4–6 digits.") { currentPin = ""; newPin = ""; pinMessage = ""; showPinDialog = true } }
+            item { Text("The top-right mode button returns to Senior Mode and takes you back to Home.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { SettingsActionCard("Change Caregiver PIN", "Requires the current master PIN. The new PIN must contain 4–6 digits.", "Change PIN") { currentPin = ""; newPin = ""; pinMessage = ""; showPinDialog = true } }
         }
         item { SectionLabel("Accessibility") }
         item {
             SettingsCard("Text size") {
-                Text("Current: ${(textSizeScale * 100).toInt()}%", fontSize = 15.sp, color = TextGray)
+                Text("Current: ${(textSizeScale * 100).toInt()}%", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Normal" to 1f, "Large" to 1.2f, "Extra large" to 1.4f).forEach { (label, scale) ->
                         Button(onClick = { viewModel?.setTextSize(scale); auditStore.record("Text size changed to $label") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), colors = ButtonDefaults.buttonColors(containerColor = if (textSizeScale == scale) PrimaryTeal else MaterialTheme.colorScheme.surfaceVariant, contentColor = if (textSizeScale == scale) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)) {
@@ -65,7 +66,7 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         }
         item {
             SettingsCard("Appearance") {
-                Text("Use the device setting or choose a fixed theme for every CareApp screen.", color = TextGray, fontSize = 14.sp)
+                Text("Use the device setting or choose a fixed theme for every CareApp screen.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("System default" to ThemeViewModel.AppThemeMode.SYSTEM, "Light" to ThemeViewModel.AppThemeMode.LIGHT, "Dark" to ThemeViewModel.AppThemeMode.DARK).forEach { (label, mode) ->
                         Button(onClick = { onThemeModeChange(mode); auditStore.record("Theme changed to $label") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), colors = ButtonDefaults.buttonColors(containerColor = if (themeMode == mode) PrimaryTeal else MaterialTheme.colorScheme.surfaceVariant, contentColor = if (themeMode == mode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)) {
@@ -86,17 +87,18 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
                     }
                 },
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Text("About CareApp", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
                     Text("Version 1.0", color = TextGray)
                     Text("A memory-care safety app for seniors and caregivers.", modifier = Modifier.padding(top = 4.dp))
-                    if (isCaregiverMode && aboutTaps in 1..4) Text("About CareApp", color = TextGray, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
+                    if (isCaregiverMode && aboutTaps in 1..4) Text("Demo Mode: $aboutTaps/5 taps", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
                 }
             }
         }
-        item { Text("Demo Mode is available to caregivers by tapping About CareApp five times.", fontSize = 13.sp, color = TextGray) }
+        item { Text("Caregivers can open Demo Mode by tapping About CareApp five times.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
     if (showPinDialog) AlertDialog(
         onDismissRequest = { showPinDialog = false },
@@ -114,23 +116,23 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(text, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 6.dp))
+    Text(text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 6.dp))
 }
 
 @Composable
 private fun SettingsCard(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = { Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface); content() })
     }
 }
 
 @Composable
-private fun SettingsActionCard(title: String, description: String, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)) {
+private fun SettingsActionCard(title: String, description: String, actionLabel: String = "Open Care Setup", onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
         Column(Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
-            Text(description, color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.padding(top = 4.dp))
-            Text("Open Care Setup", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Text(description, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.padding(top = 4.dp))
+            Text(actionLabel, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }
