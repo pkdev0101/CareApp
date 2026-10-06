@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,7 +59,10 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("100%" to 1f, "120%" to 1.2f, "140%" to 1.4f).forEach { (label, scale) ->
                         Button(onClick = { viewModel?.setTextSize(scale); auditStore.record("Text size changed to $label") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), colors = ButtonDefaults.buttonColors(containerColor = if (textSizeScale == scale) PrimaryTeal else MaterialTheme.colorScheme.surfaceVariant, contentColor = if (textSizeScale == scale) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)) {
-                            Text(label, fontSize = 13.sp)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("A", fontSize = (18f * scale).sp, fontWeight = FontWeight.Bold, lineHeight = (20f * scale).sp)
+                                Text(label, fontSize = 11.sp)
+                            }
                         }
                     }
                 }
