@@ -57,7 +57,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundLight)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Header
         Column(
@@ -70,13 +70,13 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 text = "📋 Weekly Care Report",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "For ${senior.doctorName}",
                 fontSize = 14.sp,
-                color = PrimaryTealVeryLight
+                color = MaterialTheme.colorScheme.primaryContainer
             )
         }
 
@@ -120,7 +120,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SecondaryCoral)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary, contentColor = MaterialTheme.colorScheme.onSecondary)
             ) {
                 Text("📧 Share with Doctor", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
@@ -136,7 +136,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryTealLight)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
             ) {
                 Text("📋 Copy to Clipboard", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
@@ -172,7 +172,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentAmber)
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary, contentColor = MaterialTheme.colorScheme.onTertiary)
             ) {
                 Text("🔄 Refresh Report", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
@@ -182,7 +182,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
             // Disclaimer
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
                 border = androidx.compose.material3.CardDefaults.outlinedCardBorder()
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
@@ -190,13 +190,13 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                         text = "⚠️ Medical Disclaimer",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE65100)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "This report is for information and caregiver communication only. It does not diagnose or treat medical conditions. Always consult with a healthcare provider for medical advice.",
                         fontSize = 11.sp,
-                        color = Color(0xFF5D4037)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
             }
@@ -208,9 +208,9 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
 
 @Composable
 private fun ReportSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+    Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(title, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+            Text(title, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             content()
         }
     }
@@ -219,7 +219,7 @@ private fun ReportSection(title: String, content: @Composable ColumnScope.() -> 
 @Composable
 private fun ReportRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, fontWeight = FontWeight.SemiBold, color = TextGray)
-        Text(value, fontWeight = FontWeight.Bold, color = TextDark)
+        Text(label, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     }
 }

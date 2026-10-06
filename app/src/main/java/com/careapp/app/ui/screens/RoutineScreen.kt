@@ -26,9 +26,9 @@ fun RoutineScreen(viewModel: RoutineViewModel? = null, isCaregiverMode: Boolean 
     val showDialog by (viewModel?.showDialog?.collectAsState() ?: remember { mutableStateOf(false) })
     val dialogTitle by (viewModel?.dialogTitle?.collectAsState() ?: remember { mutableStateOf("") })
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
-    LazyColumn(Modifier.fillMaxSize().background(BackgroundLight).padding(16.dp)) {
-        item { Text("My Routine", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal, modifier = Modifier.padding(vertical = 16.dp)) }
-        item { Text(if (isCaregiverMode) "Review the routine, or open Care Setup to edit it." else "Tap a task when it is complete.", fontSize = 18.sp, color = Color.DarkGray, modifier = Modifier.padding(bottom = 8.dp)) }
+    LazyColumn(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(16.dp)) {
+        item { Text("My Routine", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(vertical = 16.dp)) }
+        item { Text(if (isCaregiverMode) "Review the routine, or open Care Setup to edit it." else "Tap a task when it is complete.", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp)) }
         if (isCaregiverMode) item { Button(onClick = { navController?.navigate(CareAppScreen.CareSetup.name) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Edit routines in Care Setup") } }
         item { RoutineSection("Morning", morning, viewModel) }
         item { RoutineSection("Afternoon", afternoon, viewModel) }
@@ -41,11 +41,11 @@ fun RoutineScreen(viewModel: RoutineViewModel? = null, isCaregiverMode: Boolean 
 private fun RoutineSection(category: String, tasks: List<RoutineTask>, viewModel: RoutineViewModel?) {
     Text(category, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal, modifier = Modifier.padding(top = 12.dp))
     tasks.forEach { task ->
-        Card(Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+        Card(Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(task.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
-                    Text("Suggested: ${task.suggestedTime}", fontSize = 14.sp, color = Color.Gray)
+                    Text(task.title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Suggested: ${task.suggestedTime}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (task.completed) Text("✓ Completed at ${task.completedTime}", fontSize = 12.sp, color = SuccessTeal, fontWeight = FontWeight.Bold)
                 }
                 Checkbox(checked = task.completed, onCheckedChange = { viewModel?.toggleTaskCompletion(task) })
