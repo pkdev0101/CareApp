@@ -171,6 +171,15 @@ fun CareAppRoot() {
                                 }
                                 Spacer(Modifier.width(6.dp))
                                 Text("CareApp", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                if (currentRoute == CareAppScreen.Help.name || currentRoute == CareAppScreen.CalmMode.name) {
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        if (currentRoute == CareAppScreen.Help.name) "!" else "?",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primaryContainer
+                                    )
+                                }
                             }
                             val section = getTopBarTitle(currentRoute, isCaregiverMode)
                             if (section != null && section != "CareApp") {
