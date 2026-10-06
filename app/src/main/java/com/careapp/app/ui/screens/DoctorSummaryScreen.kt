@@ -17,7 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+import com.careapp.app.data.CaregiverNote
+import com.careapp.app.data.Medication
+import com.careapp.app.data.MedicationLog
 import com.careapp.app.data.SampleData
+import com.careapp.app.data.repository.CareRepository
 import com.careapp.app.ui.theme.*
 import com.careapp.app.util.DoctorSummaryBuilder
 import com.careapp.app.util.PdfExportManager
@@ -25,19 +30,45 @@ import com.careapp.app.util.PdfExportManager
 @Composable
 fun DoctorSummaryScreen(navController: NavController? = null) {
     val context = LocalContext.current
+    val repository = remember { CareRepository.getInstance(context) }
+    val scope = rememberCoroutineScope()
     val senior = SampleData.seniorProfile
-    val medications = SampleData.medications
-    val caregiverNotes = listOf(SampleData.caregiverNote)
+    var medications by remember { mutableStateOf<List<Medication>>(emptyList()) }
+    var medicationLogs by remember { mutableStateOf<List<MedicationLog>>(emptyList()) }
+    var caregiverNotes by remember { mutableStateOf<List<CaregiverNote>>(emptyList()) }
 
     var reportText by remember {
         mutableStateOf(
             DoctorSummaryBuilder.generateWeeklyReport(
                 senior = senior,
                 medications = medications,
-                medicationLogs = emptyList(),
+                medicationLogs = medicationLogs,
                 caregiverNotes = caregiverNotes
             )
         )
+    }
+
+    fun loadLatestReport() {
+        scope.launch {
+            val latestMedications = repository.getAllMedicationsSync()
+            val latestLogs = repository.getAllMedicationLogs()
+            val latestNotes = repository.getAllCaregiverNotes().sortedBy { it.date }
+            medications = latestMedications
+            medicationLogs = latestLogs
+            caregiverNotes = latestNotes
+            reportText = DoctorSummaryBuilder.generateWeeklyReport(
+                senior = senior,
+                medications = latestMedications,
+                medicationLogs = latestLogs,
+                caregiverNotes = latestNotes
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) { loadLatestReport() }
+
+    val medicationCounts = remember(medications, medicationLogs) {
+        DoctorSummaryBuilder.calculateWeeklyMedicationCounts(medications, medicationLogs)
     }
 
     fun shareReport() {
@@ -86,8 +117,9 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
             }
             ReportSection("Medication overview") {
                 ReportRow("Medications listed", medications.size.toString())
-                ReportRow("Doses taken", "0 recorded")
-                ReportRow("Missed doses", "0 recorded")
+                ReportRow("Expected doses", medicationCounts.expected.toString())
+                ReportRow("Doses taken", "${medicationCounts.taken} recorded")
+                ReportRow("Missed doses", "${medicationCounts.missed} recorded")
                 Text(
                     "Medication instructions are caregiver-entered and are not dose recommendations.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -111,7 +143,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 }
             }
             ReportSection("Caregiver observations") {
-                val latest = caregiverNotes.lastOrNull()
+                val latest = caregiverNotes.maxByOrNull { it.date }
                 ReportRow("Mood", latest?.mood ?: "Not recorded")
                 ReportRow("Sleep", latest?.sleepQuality ?: "Not recorded")
                 ReportRow("Safety", latest?.safetyNotes ?: "Not recorded")
@@ -158,30 +190,6 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
             ) { Text("Export PDF") }
 
             Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedButton(onClick = { navController?.popBackStack() }, modifier = Modifier.fillMaxWidth()) {
-                Text("Back")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    // Regenerate report
-                    reportText = DoctorSummaryBuilder.generateWeeklyReport(
-                        senior = senior,
-                        medications = medications,
-                        medicationLogs = emptyList(),
-                        caregiverNotes = caregiverNotes
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary, contentColor = MaterialTheme.colorScheme.onTertiary)
-            ) {
-                Text("🔄 Refresh Report", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
 
             Spacer(modifier = Modifier.height(20.dp))
 

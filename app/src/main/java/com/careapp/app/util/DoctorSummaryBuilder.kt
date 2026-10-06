@@ -5,9 +5,19 @@ import com.careapp.app.data.Medication
 import com.careapp.app.data.MedicationLog
 import com.careapp.app.data.SeniorProfile
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 object DoctorSummaryBuilder {
+
+    data class MedicationReportCounts(
+        val expected: Int,
+        val taken: Int,
+        val missed: Int,
+        val skipped: Int
+    )
 
     fun generateWeeklyReport(
         senior: SeniorProfile,
@@ -15,10 +25,11 @@ object DoctorSummaryBuilder {
         medicationLogs: List<MedicationLog>,
         caregiverNotes: List<CaregiverNote>
     ): String {
-        val missedCount = medicationLogs.count { it.status == "Missed" }
-        val takenCount = medicationLogs.count { it.status == "Taken" }
-        val skippedCount = medicationLogs.count { it.status == "Skipped" }
-        val adherence = if (medicationLogs.isEmpty()) 0 else (takenCount * 100 / medicationLogs.size)
+        val medicationCounts = calculateWeeklyMedicationCounts(medications, medicationLogs)
+        val missedCount = medicationCounts.missed
+        val takenCount = medicationCounts.taken
+        val skippedCount = medicationCounts.skipped
+        val adherence = if (medicationCounts.expected == 0) 0 else (takenCount * 100 / medicationCounts.expected)
         val confusionEpisodes = caregiverNotes.count { it.confusionNotes.isNotEmpty() }
 
         return """
@@ -35,6 +46,7 @@ object DoctorSummaryBuilder {
             MEDICATION COMPLIANCE
             ─────────────────────────────────────────
             Total Medications: ${medications.size}
+            Expected Doses: ${medicationCounts.expected}
             Doses Taken: $takenCount
             Doses Missed: ⚠️ $missedCount
             Doses Skipped: $skippedCount
@@ -117,6 +129,65 @@ object DoctorSummaryBuilder {
             ═══════════════════════════════════════════
         """.trimIndent()
     }
+
+    /**
+     * Counts scheduled doses for the current seven-day report window. An
+     * as-needed medication has no expected dose. A past scheduled occurrence
+     * without a recorded outcome is considered missed after the same 30-minute
+     * grace period used by the medication history screen.
+     */
+    fun calculateWeeklyMedicationCounts(
+        medications: List<Medication>,
+        medicationLogs: List<MedicationLog>,
+        now: LocalDateTime = LocalDateTime.now()
+    ): MedicationReportCounts {
+        val firstDate = now.toLocalDate().minusDays(6)
+        val lastDate = now.toLocalDate()
+        var expected = 0
+        var taken = 0
+        var missed = 0
+        var skipped = 0
+
+        medications.forEach { medication ->
+            val startTime = parseScheduledTime(medication.scheduledTime) ?: return@forEach
+            val intervalMinutes = medication.frequencyMinutes.coerceAtLeast(1)
+            val medicationLogs = medicationLogs.filter { log ->
+                log.medicationId == medication.id &&
+                    runCatching { LocalDate.parse(log.date) }.getOrNull()?.let { it >= firstDate && it <= lastDate } == true
+            }
+
+            var date = firstDate
+            while (!date.isAfter(lastDate)) {
+                val dayStart = date.atTime(startTime)
+                var occurrence = dayStart
+                var dueOccurrences = 0
+                while (occurrence.toLocalDate() == date && !occurrence.isAfter(now)) {
+                    if (!occurrence.plusMinutes(30).isAfter(now)) dueOccurrences++
+                    occurrence = occurrence.plusMinutes(intervalMinutes.toLong())
+                }
+
+                expected += dueOccurrences
+                val dayLogs = medicationLogs.filter { it.date == date.toString() }
+                val takenLogs = dayLogs.count { it.status == "Taken" }.coerceAtMost(dueOccurrences)
+                val skippedLogs = dayLogs.count { it.status == "Skipped" }.coerceAtMost((dueOccurrences - takenLogs).coerceAtLeast(0))
+                val helpLogs = dayLogs.count { it.status == "Needs Help" || it.status == "Need Help" }
+                    .coerceAtMost((dueOccurrences - takenLogs - skippedLogs).coerceAtLeast(0))
+                val explicitMissed = dayLogs.count { it.status == "Missed" }
+                    .coerceAtMost((dueOccurrences - takenLogs - skippedLogs - helpLogs).coerceAtLeast(0))
+
+                taken += takenLogs
+                skipped += skippedLogs
+                missed += explicitMissed + (dueOccurrences - takenLogs - skippedLogs - helpLogs - explicitMissed).coerceAtLeast(0)
+                date = date.plusDays(1)
+            }
+        }
+
+        return MedicationReportCounts(expected, taken, missed, skipped)
+    }
+
+    private fun parseScheduledTime(value: String): LocalTime? = runCatching {
+        LocalTime.parse(value.trim().uppercase(), DateTimeFormatter.ofPattern("h:mm a"))
+    }.getOrNull()
 
     private fun calculateAge(birthday: String): String {
         return try {

@@ -71,6 +71,8 @@ class CareRepository private constructor(context: Context) {
 
     suspend fun getLatestCaregiverNote(): CaregiverNote? = caregiverNoteDao.getLatestCaregiverNote()
 
+    suspend fun getAllCaregiverNotes(): List<CaregiverNote> = caregiverNoteDao.getAllCaregiverNotes()
+
     fun getAllPlaces(): Flow<List<SavedPlace>> = savedPlaceDao.getAllPlaces()
     suspend fun getAllPlacesSync(): List<SavedPlace> = savedPlaceDao.getAllPlacesSync()
     suspend fun insertPlace(place: SavedPlace) { savedPlaceDao.insertPlace(place) }

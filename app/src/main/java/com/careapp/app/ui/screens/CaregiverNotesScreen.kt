@@ -28,6 +28,9 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
     var breakfast by remember { mutableStateOf(false) }
     var lunch by remember { mutableStateOf(false) }
     var dinner by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        viewModel?.refreshTodayNote()
+    }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Caregiver Handoff", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground) }
         item { Text("Record a few simple observations for the next caregiver.", fontSize = 18.sp) }

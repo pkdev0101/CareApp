@@ -53,11 +53,11 @@ class CaregiverNotesViewModel(private val repository: CareRepository) : ViewMode
     val summaryText: StateFlow<String> = _summaryText.asStateFlow()
 
     init {
-        loadTodayNote()
+        refreshTodayNote()
     }
 
     // ========== LOAD TODAY'S NOTE ==========
-    private fun loadTodayNote() {
+    fun refreshTodayNote() {
         viewModelScope.launch {
             val existingNote = repository.getTodayNote(today)
             if (existingNote != null) {
