@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.careapp.app.data.CaregiverNote
 import com.careapp.app.data.MemoryCard
 import com.careapp.app.data.Medication
@@ -25,7 +27,7 @@ import com.careapp.app.data.dao.SavedPlaceDao
         SavedPlace::class,
         CaregiverNote::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class CareAppDatabase : RoomDatabase() {
@@ -46,11 +48,18 @@ abstract class CareAppDatabase : RoomDatabase() {
                     CareAppDatabase::class.java,
                     "careanchor_database"
                 )
+                    .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigration()
                     .build()
 
                 INSTANCE = instance
                 instance
+            }
+        }
+
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE medications ADD COLUMN frequencyMinutes INTEGER NOT NULL DEFAULT 1440")
             }
         }
     }

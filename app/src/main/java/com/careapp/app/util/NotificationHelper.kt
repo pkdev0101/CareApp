@@ -73,7 +73,7 @@ object NotificationHelper {
         alarmManager.setInexactRepeating(
             android.app.AlarmManager.RTC_WAKEUP,
             next.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-            android.app.AlarmManager.INTERVAL_DAY,
+            ((if (medication.frequencyMinutes > 0) medication.frequencyMinutes else 1440) * 60_000L),
             pending
         )
     }

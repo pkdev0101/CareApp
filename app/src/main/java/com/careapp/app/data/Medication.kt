@@ -13,7 +13,8 @@ data class Medication(
     val pillDescription: String,
     val reason: String,
     val doctor: String,
-    val caregiverConfirmationRequired: Boolean = false
+    val caregiverConfirmationRequired: Boolean = false,
+    val frequencyMinutes: Int = 1440
 )
 
 @Entity(tableName = "medication_logs")
