@@ -15,12 +15,22 @@ class CaregiverPinStore(context: Context) {
         editor.apply()
     }
 
+    fun initializePin(pin: String) = setPin(pin)
+
     fun matches(pin: String): Boolean = preferences.getString("caregiver_pin", null) == pin
 
     fun caregiverPin(): String = preferences.getString("caregiver_pin", "").orEmpty()
 
     fun setCaregiverPin(pin: String) {
-        preferences.edit().putString("caregiver_pin", pin).apply()
+        val editor = preferences.edit().putString("caregiver_pin", pin)
+        if (preferences.getString("supervisor_pin", null).isNullOrBlank()) {
+            editor.putString("supervisor_pin", caregiverPin())
+        }
+        editor.apply()
+    }
+
+    fun setSupervisorPin(pin: String) {
+        preferences.edit().putString("supervisor_pin", pin).apply()
     }
 
     fun matchesSupervisor(pin: String): Boolean = supervisorPin() == pin

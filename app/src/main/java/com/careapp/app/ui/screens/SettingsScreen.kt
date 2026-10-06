@@ -32,6 +32,10 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
     var currentPin by remember { mutableStateOf("") }
     var newPin by remember { mutableStateOf("") }
     var pinMessage by remember { mutableStateOf("") }
+    var showSupervisorPinDialog by remember { mutableStateOf(false) }
+    var currentSupervisorPin by remember { mutableStateOf("") }
+    var newSupervisorPin by remember { mutableStateOf("") }
+    var supervisorPinMessage by remember { mutableStateOf("") }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -52,6 +56,7 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
             item { Text("The top-right mode button returns to Senior Mode and takes you back to Home.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             item { SettingsActionCard("Change Caregiver PIN", "Requires the current master PIN. The new PIN must contain 4–6 digits.", "Change PIN") { currentPin = ""; newPin = ""; pinMessage = ""; showPinDialog = true } }
         }
+        item { SettingsActionCard("Change Supervisor PIN", "Controls caregiver PIN recovery and caregiver access administration.", "Change Supervisor PIN") { currentSupervisorPin = ""; newSupervisorPin = ""; supervisorPinMessage = ""; showSupervisorPinDialog = true } }
         item { SectionLabel("Accessibility") }
         item {
             SettingsCard("Text size") {
@@ -107,13 +112,25 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         onDismissRequest = { showPinDialog = false },
         title = { Text("Change caregiver PIN") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("The current PIN is the master PIN for entering Caregiver Mode.")
-            OutlinedTextField(currentPin, { currentPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current master PIN") }, singleLine = true)
+            Text("The supervisor PIN authorizes caregiver PIN changes.")
+            OutlinedTextField(currentPin, { currentPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, singleLine = true)
             OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(6) }, label = { Text("New caregiver PIN") }, singleLine = true)
             if (pinMessage.isNotBlank()) Text(pinMessage, color = MaterialTheme.colorScheme.error)
         } },
-        confirmButton = { Button(onClick = { if (!pinStore.matches(currentPin)) pinMessage = "Current master PIN is incorrect." else if (newPin.length !in 4..6) pinMessage = "New PIN must contain 4 to 6 digits." else { pinStore.setPin(newPin); auditStore.record("Caregiver master PIN changed"); showPinDialog = false } }) { Text("Save PIN") } },
+        confirmButton = { Button(onClick = { if (!pinStore.matchesSupervisor(currentPin)) pinMessage = "Current supervisor PIN is incorrect." else if (newPin.length !in 4..6) pinMessage = "New PIN must contain 4 to 6 digits." else { pinStore.setCaregiverPin(newPin); auditStore.record("Caregiver PIN changed"); showPinDialog = false } }) { Text("Save PIN") } },
         dismissButton = { TextButton(onClick = { showPinDialog = false }) { Text("Cancel") } }
+    )
+    if (showSupervisorPinDialog) AlertDialog(
+        onDismissRequest = { showSupervisorPinDialog = false },
+        title = { Text("Change supervisor PIN") },
+        text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("This PIN controls caregiver access recovery. Keep it with the supervisor.")
+            OutlinedTextField(currentSupervisorPin, { currentSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, singleLine = true)
+            OutlinedTextField(newSupervisorPin, { newSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("New supervisor PIN") }, singleLine = true)
+            if (supervisorPinMessage.isNotBlank()) Text(supervisorPinMessage, color = MaterialTheme.colorScheme.error)
+        } },
+        confirmButton = { Button(onClick = { if (!pinStore.matchesSupervisor(currentSupervisorPin)) supervisorPinMessage = "Current supervisor PIN is incorrect." else if (newSupervisorPin.length !in 4..6) supervisorPinMessage = "New PIN must contain 4 to 6 digits." else { pinStore.setSupervisorPin(newSupervisorPin); auditStore.record("Supervisor PIN changed"); showSupervisorPinDialog = false } }) { Text("Save Supervisor PIN") } },
+        dismissButton = { TextButton(onClick = { showSupervisorPinDialog = false }) { Text("Cancel") } }
     )
 }
 

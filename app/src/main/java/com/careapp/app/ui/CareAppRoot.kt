@@ -368,7 +368,7 @@ fun CareAppRoot() {
                                 caregiverPinError = "That PIN does not match."
                             }
                         } else {
-                            if (!hasPin) caregiverPinStore.setPin(caregiverPin)
+                            if (!hasPin) caregiverPinStore.initializePin(caregiverPin)
                             showCaregiverPinDialog = false
                             modeViewModel.toggleMode()
                             navController.navigate(CareAppScreen.CaregiverNotes.name) {
