@@ -59,33 +59,26 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Header
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(PrimaryTeal)
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Weekly Care Report",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "For ${senior.doctorName}",
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.primaryContainer
-            )
-        }
-
-        // Report Content
+        // Match the Caregiver Handoff layout: themed background, compact heading,
+        // and content that starts immediately below the heading.
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
+            Text(
+                text = "Weekly Care Report",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "For ${senior.doctorName}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
+            )
+
             ReportSection("Patient") {
                 ReportRow("Name", senior.fullName)
                 ReportRow("Report period", "Last 7 days")
@@ -95,12 +88,26 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 ReportRow("Medications listed", medications.size.toString())
                 ReportRow("Doses taken", "0 recorded")
                 ReportRow("Missed doses", "0 recorded")
-                Text("Medication instructions are caregiver-entered and are not dose recommendations.", fontSize = 14.sp, color = TextGray)
+                Text(
+                    "Medication instructions are caregiver-entered and are not dose recommendations.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             ReportSection("Current medications") {
                 medications.forEach { medication ->
-                    Text(medication.name, fontWeight = FontWeight.Bold, color = PrimaryTeal)
-                    Text("${medication.dose} · ${medication.scheduledTime}", fontSize = 14.sp, color = TextGray, modifier = Modifier.padding(bottom = 6.dp))
+                    Text(
+                        medication.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "${medication.dose} · ${medication.scheduledTime}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
                 }
             }
             ReportSection("Caregiver observations") {
@@ -209,7 +216,11 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
 private fun ReportSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(title, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             content()
         }
     }
@@ -218,7 +229,17 @@ private fun ReportSection(title: String, content: @Composable ColumnScope.() -> 
 @Composable
 private fun ReportRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
