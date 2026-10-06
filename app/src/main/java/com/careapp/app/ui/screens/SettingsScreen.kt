@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -113,8 +114,8 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         title = { Text("Change caregiver PIN") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("The supervisor PIN authorizes caregiver PIN changes.")
-            OutlinedTextField(currentPin, { currentPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, singleLine = true)
-            OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(6) }, label = { Text("New caregiver PIN") }, singleLine = true)
+            OutlinedTextField(currentPin, { currentPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
+            OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(6) }, label = { Text("New caregiver PIN") }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
             if (pinMessage.isNotBlank()) Text(pinMessage, color = MaterialTheme.colorScheme.error)
         } },
         confirmButton = { Button(onClick = { if (!pinStore.matchesSupervisor(currentPin)) pinMessage = "Current supervisor PIN is incorrect." else if (newPin.length !in 4..6) pinMessage = "New PIN must contain 4 to 6 digits." else { pinStore.setCaregiverPin(newPin); auditStore.record("Caregiver PIN changed"); showPinDialog = false } }) { Text("Save PIN") } },
@@ -125,8 +126,8 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         title = { Text("Change supervisor PIN") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("This PIN controls caregiver access recovery. Keep it with the supervisor.")
-            OutlinedTextField(currentSupervisorPin, { currentSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, singleLine = true)
-            OutlinedTextField(newSupervisorPin, { newSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("New supervisor PIN") }, singleLine = true)
+            OutlinedTextField(currentSupervisorPin, { currentSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
+            OutlinedTextField(newSupervisorPin, { newSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("New supervisor PIN") }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
             if (supervisorPinMessage.isNotBlank()) Text(supervisorPinMessage, color = MaterialTheme.colorScheme.error)
         } },
         confirmButton = { Button(onClick = { if (!pinStore.matchesSupervisor(currentSupervisorPin)) supervisorPinMessage = "Current supervisor PIN is incorrect." else if (newSupervisorPin.length !in 4..6) supervisorPinMessage = "New PIN must contain 4 to 6 digits." else { pinStore.setSupervisorPin(newSupervisorPin); auditStore.record("Supervisor PIN changed"); showSupervisorPinDialog = false } }) { Text("Save Supervisor PIN") } },

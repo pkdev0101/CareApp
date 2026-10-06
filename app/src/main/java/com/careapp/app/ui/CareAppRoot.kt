@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Density
@@ -314,14 +315,15 @@ fun CareAppRoot() {
                         )
                         if (hasPin) {
                             Text("Temporary demo PIN display — hide or remove before production use.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-                            Text("Supervisor PIN: ${caregiverPinStore.supervisorPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                            Text("Caregiver PIN: ${caregiverPinStore.caregiverPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                            Text("Supervisor PIN: ${"*".repeat(caregiverPinStore.supervisorPin().length.coerceAtLeast(4))}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                            Text("Caregiver PIN: ${"*".repeat(caregiverPinStore.caregiverPin().length.coerceAtLeast(4))}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                         }
                         if (!showSupervisorReset) {
                             OutlinedTextField(
                                 value = caregiverPin,
                                 onValueChange = { value -> caregiverPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
                                 label = { Text("PIN") },
+                                visualTransformation = PasswordVisualTransformation(),
                                 singleLine = true
                             )
                         }
@@ -331,12 +333,14 @@ fun CareAppRoot() {
                                 value = supervisorPin,
                                 onValueChange = { value -> supervisorPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
                                 label = { Text("Supervisor PIN") },
+                                visualTransformation = PasswordVisualTransformation(),
                                 singleLine = true
                             )
                             OutlinedTextField(
                                 value = replacementCaregiverPin,
                                 onValueChange = { value -> replacementCaregiverPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
                                 label = { Text("New caregiver PIN") },
+                                visualTransformation = PasswordVisualTransformation(),
                                 singleLine = true
                             )
                         } else if (hasPin && caregiverPinAttempts > 0) {
