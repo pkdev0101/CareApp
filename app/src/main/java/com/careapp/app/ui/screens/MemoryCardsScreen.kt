@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.careapp.app.data.MemoryCard
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.theme.*
+import com.careapp.app.util.formatPhoneNumber
 
 @Composable
 fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? = null) {
@@ -144,7 +145,7 @@ fun MemoryCardsScreen(viewModel: com.careapp.app.viewmodel.MemoryCardViewModel? 
                         )
                         if (selectedContactPhone.isNotEmpty()) {
                             Text(
-                                text = selectedContactPhone,
+                                text = formatPhoneNumber(selectedContactPhone),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -216,7 +217,7 @@ fun MemoryCardItem(card: MemoryCard) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Phone: ${card.phone}",
+                text = "Phone: ${formatPhoneNumber(card.phone)}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryTeal,

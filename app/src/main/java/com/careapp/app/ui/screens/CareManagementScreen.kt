@@ -18,6 +18,7 @@ import com.careapp.app.data.repository.CareRepository
 import com.careapp.app.util.CaregiverAuditStore
 import com.careapp.app.util.MedicationReminderPreferences
 import com.careapp.app.util.NotificationHelper
+import com.careapp.app.util.formatPhoneNumber
 import kotlinx.coroutines.launch
 
 enum class CareManagementType(val heading: String, val addLabel: String) {
@@ -55,7 +56,7 @@ fun CareManagementScreen(type: CareManagementType, repository: CareRepository) {
                 ManagementCard("${medication.name} · ${medication.dose}", "${medicationScheduleText(medication)} · ${medication.instructions}", onEdit = { editor = medication }, onDelete = { scope.launch { repository.deleteMedication(medication); reminderPreferences.setEnabled(medication, false); NotificationHelper.cancelMedicationReminder(context, medication); audit.record("Medication deleted: ${medication.name}") } })
             }
             CareManagementType.PEOPLE -> items(people, key = { "person_${it.id}" }) { person ->
-                ManagementCard(person.name, "${person.relationship} · ${person.phone}", { editor = person }, { scope.launch { repository.deleteMemoryCard(person); audit.record("Person deleted: ${person.name}") } })
+                ManagementCard(person.name, "${person.relationship} · ${formatPhoneNumber(person.phone)}", { editor = person }, { scope.launch { repository.deleteMemoryCard(person); audit.record("Person deleted: ${person.name}") } })
             }
             CareManagementType.ROUTINES -> items(routines, key = { "routine_${it.id}" }) { routine ->
                 ManagementCard(routine.title, "${routine.category} · ${routine.suggestedTime}", { editor = routine }, { scope.launch { repository.deleteRoutineTask(routine); refresh++ ; audit.record("Routine deleted: ${routine.title}") } })
