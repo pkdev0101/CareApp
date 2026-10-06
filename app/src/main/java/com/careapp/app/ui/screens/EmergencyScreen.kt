@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.StateFlow
 fun EmergencyScreen(viewModel: com.careapp.app.viewmodel.EmergencyViewModel? = null, navController: NavController? = null) {
     val senior = SampleData.seniorProfile
     val context = LocalContext.current
-    val showEmergencyCard by (viewModel?.showEmergencyCard?.collectAsState() ?: remember { mutableStateOf(false) })
     val showDialog by (viewModel?.showDialog?.collectAsState() ?: remember { mutableStateOf(false) })
     val dialogTitle by (viewModel?.dialogTitle?.collectAsState() ?: remember { mutableStateOf("") })
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
@@ -103,11 +102,12 @@ fun EmergencyScreen(viewModel: com.careapp.app.viewmodel.EmergencyViewModel? = n
 
         item {
             LargeButton(
-                text = "Show My Emergency Card",
-                onClick = { viewModel?.showEmergencyCard() ?: Unit },
+                text = "Show My Emergency Card & QR",
+                onClick = { navController?.navigate(CareAppScreen.QRCode.name) },
                 backgroundColor = SecondaryCoral
             )
         }
+
 
         item {
             LargeButton(
@@ -139,7 +139,7 @@ fun EmergencyScreen(viewModel: com.careapp.app.viewmodel.EmergencyViewModel? = n
         item { Spacer(modifier = Modifier.height(20.dp)) }
 
         // Emergency Card Display (shown when button tapped)
-        if (showEmergencyCard) {
+        if (false) {
             item {
                 Card(
                     modifier = Modifier

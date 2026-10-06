@@ -11,7 +11,7 @@ interface MedicationDao {
     suspend fun countMedications(): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMedication(medication: Medication)
+    suspend fun insertMedication(medication: Medication): Long
 
     @Query("SELECT * FROM medications ORDER BY scheduledTime ASC")
     fun getAllMedications(): Flow<List<Medication>>
@@ -21,6 +21,9 @@ interface MedicationDao {
 
     @Query("SELECT * FROM medications WHERE id = :medicationId")
     suspend fun getMedicationById(medicationId: Int): Medication?
+
+    @Update
+    suspend fun updateMedication(medication: Medication)
 
     @Delete
     suspend fun deleteMedication(medication: Medication)

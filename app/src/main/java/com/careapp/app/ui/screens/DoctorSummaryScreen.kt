@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,24 +87,29 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Report Text Display
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                SelectionContainer {
-                    Text(
-                        text = reportText,
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = TextDark,
-                        modifier = Modifier.padding(16.dp),
-                        lineHeight = 16.sp
-                    )
+            ReportSection("Patient") {
+                ReportRow("Name", senior.fullName)
+                ReportRow("Report period", "Last 7 days")
+                ReportRow("Doctor", senior.doctorName)
+            }
+            ReportSection("Medication overview") {
+                ReportRow("Medications listed", medications.size.toString())
+                ReportRow("Doses taken", "0 recorded")
+                ReportRow("Missed doses", "0 recorded")
+                Text("Medication instructions are caregiver-entered and are not dose recommendations.", fontSize = 14.sp, color = TextGray)
+            }
+            ReportSection("Current medications") {
+                medications.forEach { medication ->
+                    Text(medication.name, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+                    Text("${medication.dose} · ${medication.scheduledTime}", fontSize = 14.sp, color = TextGray, modifier = Modifier.padding(bottom = 6.dp))
                 }
+            }
+            ReportSection("Caregiver observations") {
+                val latest = caregiverNotes.lastOrNull()
+                ReportRow("Mood", latest?.mood ?: "Not recorded")
+                ReportRow("Sleep", latest?.sleepQuality ?: "Not recorded")
+                ReportRow("Safety", latest?.safetyNotes ?: "Not recorded")
+                ReportRow("Confusion notes", latest?.confusionNotes ?: "None recorded")
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -200,5 +203,23 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
 
             Spacer(modifier = Modifier.height(20.dp))
         }
+    }
+}
+
+@Composable
+private fun ReportSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(title, fontSize = 19.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+            content()
+        }
+    }
+}
+
+@Composable
+private fun ReportRow(label: String, value: String) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, fontWeight = FontWeight.SemiBold, color = TextGray)
+        Text(value, fontWeight = FontWeight.Bold, color = TextDark)
     }
 }

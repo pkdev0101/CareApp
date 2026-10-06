@@ -1,5 +1,7 @@
 package com.careapp.app.ui.screens
 
+import android.content.Intent
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,6 +32,7 @@ import java.util.*
 @Composable
 fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewModel? = null) {
     val senior = SampleData.seniorProfile
+    val context = androidx.compose.ui.platform.LocalContext.current
     val today = LocalDate.now()
     val dayName = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
     val monthDay = "${today.monthValue.toString().padStart(2, '0')}/${today.dayOfMonth.toString().padStart(2, '0')}/${today.year}"
@@ -62,11 +65,12 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
         }
 
         item {
-            LargeButton(
-                text = "I Forgot",
-                onClick = { navController?.navigate(CareAppScreen.CalmMode.name) },
-                backgroundColor = SupportPlum
-            )
+            Card(colors = CardDefaults.cardColors(containerColor = SupportPlum), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    LargeButton(text = "Help Me Remember", onClick = { navController?.navigate(CareAppScreen.Help.name) }, backgroundColor = SupportPlum, modifier = Modifier.padding(0.dp))
+                    Text("What was I doing? What do I do next?", color = Color.White, fontSize = 16.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+                }
+            }
         }
 
         item { Spacer(modifier = Modifier.height(12.dp)) }
@@ -77,7 +81,7 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
             ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
                     Text(
                         text = "Next Step",
                         fontSize = 22.sp,
@@ -166,8 +170,8 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
 
         item {
             LargeButton(
-                text = "Quick Help",
-                onClick = { navController?.navigate(CareAppScreen.Help.name) },
+                text = "Call Caregiver",
+                onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:${senior.primaryCaregiverPhone}"))) } },
                 backgroundColor = SupportPlumLight
             )
         }
@@ -182,8 +186,8 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
 
         item {
             LargeButton(
-                text = "I Am Lost",
-                onClick = { navController?.navigate(CareAppScreen.Help.name) },
+                text = "I May Be Lost",
+                onClick = { navController?.navigate(CareAppScreen.Lost.name) },
                 backgroundColor = SupportPlumLight
             )
         }

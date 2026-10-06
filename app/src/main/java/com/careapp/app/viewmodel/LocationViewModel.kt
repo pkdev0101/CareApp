@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 
 class LocationViewModel(private val repository: CareRepository) : ViewModel() {
 
-    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    private val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
 
     // Current location
     private val _currentLatitude = MutableStateFlow(0.0)
@@ -22,6 +22,14 @@ class LocationViewModel(private val repository: CareRepository) : ViewModel() {
     // Location timestamp
     private val _locationTimestamp = MutableStateFlow("")
     val locationTimestamp: StateFlow<String> = _locationTimestamp.asStateFlow()
+    val lastUpdatedTime: StateFlow<String> = _locationTimestamp.asStateFlow()
+
+    private val _isDemoLocation = MutableStateFlow(true)
+    val isDemoLocation: StateFlow<Boolean> = _isDemoLocation.asStateFlow()
+    private val _locationStatusText = MutableStateFlow("Location is not available yet.")
+    val locationStatusText: StateFlow<String> = _locationStatusText.asStateFlow()
+    private val _shareLocationText = MutableStateFlow("")
+    val shareLocationText: StateFlow<String> = _shareLocationText.asStateFlow()
 
     // Geofence status
     private val _isWithinSafeZone = MutableStateFlow(true)
@@ -67,6 +75,14 @@ class LocationViewModel(private val repository: CareRepository) : ViewModel() {
             _currentLatitude.value = latitude
             _currentLongitude.value = longitude
             _locationTimestamp.value = timestamp
+            _locationStatusText.value = "Demo location"
+            _shareLocationText.value = buildString {
+                append("CareApp Location\nI may need help.\n\n")
+                append("Latitude: %.5f\nLongitude: %.5f\nLast updated: %s\n\n".format(latitude, longitude, timestamp))
+                append("Google Maps link: https://maps.google.com/?q=$latitude,$longitude\n\n")
+                append("Caregiver note: I may have memory loss. Please call my caregiver if needed.\n")
+                append("Demo location for app testing.")
+            }
 
             // Check if within safe zone (demo: within 0.05 degrees = ~5km)
             val distanceFromHome = com.careapp.app.util.LocationManager.calculateDistance(
@@ -99,9 +115,7 @@ class LocationViewModel(private val repository: CareRepository) : ViewModel() {
 
     // ========== SHARE LOCATION ==========
     fun shareLocation() {
-        val locationText = "I am at coordinates: ${_currentLatitude.value}, ${_currentLongitude.value}\n" +
-            "Time: ${_locationTimestamp.value}\n" +
-            "Safe zone status: ${if (_isWithinSafeZone.value) "Within safe zone" else "Outside safe zone"}"
+        val locationText = _shareLocationText.value.ifBlank { "Location is not available yet." }
 
         _dialogTitle.value = "Location Shared"
         _dialogMessage.value = locationText

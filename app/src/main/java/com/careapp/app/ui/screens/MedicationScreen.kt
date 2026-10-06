@@ -24,7 +24,7 @@ import com.careapp.app.viewmodel.MedicationViewModel
 import com.careapp.app.util.PdfExportManager
 
 @Composable
-fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavController? = null) {
+fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavController? = null, isCaregiverMode: Boolean = false) {
     // Use ViewModel if available, otherwise fall back to SampleData
     val medications by (viewModel?.medications?.collectAsState() ?: remember { mutableStateOf(SampleData.medications) })
     val showDialog by (viewModel?.showDialog?.collectAsState() ?: remember { mutableStateOf(false) })
@@ -45,12 +45,19 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
     ) {
         item {
             Text(
-                text = "My Medicine",
-                fontSize = 32.sp,
+                text = if (isCaregiverMode) "Medication management" else "Today's medicine",
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryTeal,
                 modifier = Modifier.padding(vertical = 16.dp)
             )
+        }
+
+        if (isCaregiverMode) {
+            item {
+                Text("Instructions shown here are entered by the caregiver. CareApp does not recommend doses.", fontSize = 14.sp, color = Color.DarkGray, modifier = Modifier.padding(bottom = 8.dp))
+                Button(onClick = { navController?.navigate(com.careapp.app.ui.CareAppScreen.CareSetup.name) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Add or update medications") }
+            }
         }
 
         if (overdueMedications.isNotEmpty()) {

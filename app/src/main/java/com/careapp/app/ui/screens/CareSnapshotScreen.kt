@@ -181,7 +181,7 @@ fun CareSnapshotScreen(navController: NavController? = null) {
         OutlinedButton(
             onClick = { navController?.navigate(com.careapp.app.ui.CareAppScreen.QRCode.name) },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Show QR Code") }
+        ) { Text("Show Emergency QR") }
 
         Spacer(modifier = Modifier.height(12.dp))
         Text(

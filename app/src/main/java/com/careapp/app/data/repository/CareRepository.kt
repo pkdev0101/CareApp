@@ -12,11 +12,17 @@ class CareRepository private constructor(context: Context) {
     private val routineDao = database.routineDao()
     private val memoryCardDao = database.memoryCardDao()
     private val caregiverNoteDao = database.caregiverNoteDao()
+    private val savedPlaceDao = database.savedPlaceDao()
 
     suspend fun seedIfNeeded() {
-        if (medicationDao.countMedications() == 0) SampleData.medications.forEach { medicationDao.insertMedication(it) }
-        if (routineDao.countRoutineTasks() == 0) SampleData.routineTasks.forEach { routineDao.insertRoutineTask(it) }
-        if (memoryCardDao.countMemoryCards() == 0) SampleData.memoryCards.forEach { memoryCardDao.insertMemoryCard(it) }
+        val existingMedicationNames = medicationDao.getAllMedicationsSync().map { it.name }.toSet()
+        SampleData.medications.filterNot { it.name in existingMedicationNames }.forEach { medicationDao.insertMedication(it) }
+        val existingRoutineTitles = routineDao.getAllRoutineTasks().map { it.title }.toSet()
+        SampleData.routineTasks.filterNot { it.title in existingRoutineTitles }.forEach { routineDao.insertRoutineTask(it) }
+        val existingMemoryNames = memoryCardDao.getAllMemoryCardsSync().map { it.name }.toSet()
+        SampleData.memoryCards.filterNot { it.name in existingMemoryNames }.forEach { memoryCardDao.insertMemoryCard(it) }
+        val existingPlaceNames = savedPlaceDao.getAllPlacesSync().map { it.name }.toSet()
+        SampleData.savedPlaces.filterNot { it.name in existingPlaceNames }.forEach { savedPlaceDao.insertPlace(it) }
         if (caregiverNoteDao.countNotes() == 0) caregiverNoteDao.insertCaregiverNote(
             SampleData.caregiverNote.copy(date = LocalDate.now().toString())
         )
@@ -27,7 +33,9 @@ class CareRepository private constructor(context: Context) {
 
     suspend fun getAllMedicationsSync(): List<Medication> = medicationDao.getAllMedicationsSync()
 
-    suspend fun insertMedication(medication: Medication) { medicationDao.insertMedication(medication) }
+    suspend fun insertMedication(medication: Medication): Medication = medication.copy(id = medicationDao.insertMedication(medication).toInt())
+    suspend fun updateMedication(medication: Medication) { medicationDao.updateMedication(medication) }
+    suspend fun deleteMedication(medication: Medication) { medicationDao.deleteMedication(medication) }
 
     suspend fun getMedicationLogsForDate(date: String): List<MedicationLog> = medicationDao.getMedicationLogsByDate(date)
 
@@ -42,13 +50,17 @@ class CareRepository private constructor(context: Context) {
     fun getRoutineTasksByCategory(category: String): Flow<List<RoutineTask>> = routineDao.getTasksByCategory(category)
 
     suspend fun insertRoutineTask(task: RoutineTask) { routineDao.insertRoutineTask(task) }
+    suspend fun getAllRoutineTasksSync(): List<RoutineTask> = routineDao.getAllRoutineTasks()
 
     suspend fun updateRoutineTask(task: RoutineTask) { routineDao.updateRoutineTask(task) }
+    suspend fun deleteRoutineTask(task: RoutineTask) { routineDao.deleteRoutineTask(task) }
 
     // ========== MEMORY CARD OPERATIONS ==========
     fun getAllMemoryCards(): Flow<List<MemoryCard>> = memoryCardDao.getAllMemoryCards()
 
     suspend fun insertMemoryCard(card: MemoryCard) { memoryCardDao.insertMemoryCard(card) }
+    suspend fun updateMemoryCard(card: MemoryCard) { memoryCardDao.updateMemoryCard(card) }
+    suspend fun deleteMemoryCard(card: MemoryCard) { memoryCardDao.deleteMemoryCard(card) }
 
     // ========== CAREGIVER NOTE OPERATIONS ==========
     suspend fun getTodayNote(date: String): CaregiverNote? = caregiverNoteDao.getCaregiverNoteByDate(date)
@@ -58,6 +70,12 @@ class CareRepository private constructor(context: Context) {
     suspend fun updateCaregiverNote(note: CaregiverNote) { caregiverNoteDao.updateCaregiverNote(note) }
 
     suspend fun getLatestCaregiverNote(): CaregiverNote? = caregiverNoteDao.getLatestCaregiverNote()
+
+    fun getAllPlaces(): Flow<List<SavedPlace>> = savedPlaceDao.getAllPlaces()
+    suspend fun getAllPlacesSync(): List<SavedPlace> = savedPlaceDao.getAllPlacesSync()
+    suspend fun insertPlace(place: SavedPlace) { savedPlaceDao.insertPlace(place) }
+    suspend fun updatePlace(place: SavedPlace) { savedPlaceDao.updatePlace(place) }
+    suspend fun deletePlace(place: SavedPlace) { savedPlaceDao.deletePlace(place) }
 
     companion object {
         @Volatile

@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -12,10 +13,13 @@ import androidx.compose.ui.platform.LocalContext
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.CaregiverNotesViewModel
 import com.careapp.app.util.PdfExportManager
+import com.careapp.app.util.CaregiverAuditStore
 
 @Composable
 fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
     val context = LocalContext.current
+    val auditStore = remember { CaregiverAuditStore(context) }
+    val auditSummary = remember { auditStore.handoffSummary() }
     val note by (viewModel?.noteContent?.collectAsState() ?: remember { mutableStateOf("") })
     val mood by (viewModel?.mood?.collectAsState() ?: remember { mutableStateOf("Calm") })
     val sleep by (viewModel?.sleepQuality?.collectAsState() ?: remember { mutableStateOf("Good") })
@@ -40,7 +44,7 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
         item {
             OutlinedButton(
                 onClick = {
-                    val handoff = "Notes: $note\nMood: $mood\nSleep: $sleep\nSummary: $summary"
+                    val handoff = "Notes: $note\nMood: $mood\nSleep: $sleep\nSummary: $summary\n\nCaregiver audit trail:\n$auditSummary"
                     val file = PdfExportManager.createTextPdf(context, "careapp-caregiver-handoff.pdf", "CareApp Caregiver Handoff", handoff)
                     PdfExportManager.sharePdf(context, file, "Share Caregiver Handoff PDF")
                 },
@@ -48,6 +52,15 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
             ) { Text("Export Handoff PDF") }
         }
         if (summary.isNotBlank()) item { Card { Text(summary, modifier = Modifier.padding(16.dp), fontSize = 17.sp) } }
+        item {
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F1F5))) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Caregiver audit trail", fontWeight = FontWeight.Bold, color = PrimaryTeal)
+                    Text("Recent changes include caregiver name and the last four digits of the local security code.", fontSize = 13.sp, color = TextGray)
+                    Text(auditSummary, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                }
+            }
+        }
     }
     if (showDialog) AlertDialog(onDismissRequest = { viewModel?.dismissDialog() }, title = { Text("Saved") }, text = { Text(dialogMessage) }, confirmButton = { Button(onClick = { viewModel?.dismissDialog() }) { Text("OK") } })
 }

@@ -5,6 +5,12 @@ import android.provider.ContactsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +21,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.BitmapFactory
+import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -168,12 +178,15 @@ fun MemoryCardItem(card: MemoryCard) {
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-            Text(
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AnimatedPersonAvatar(card.name, card.photoUri, Modifier.padding(end = 12.dp))
+                Text(
                 text = "This is ${card.name}.",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = SecondaryCoral
-            )
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -220,5 +233,26 @@ fun MemoryCardItem(card: MemoryCard) {
                 }
             )
         }
+    }
+}
+
+@Composable
+fun AnimatedPersonAvatar(name: String, photoUri: String?, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val photo = remember(photoUri) {
+        photoUri?.let { runCatching { context.contentResolver.openInputStream(android.net.Uri.parse(it))?.use(BitmapFactory::decodeStream) }.getOrNull() }
+    }
+    if (photo != null) {
+        Image(photo.asImageBitmap(), contentDescription = "$name photo", modifier = modifier.size(64.dp), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+        return
+    }
+    val motionEnabled = remember {
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
+    }
+    val transition = rememberInfiniteTransition(label = "person avatar")
+    val alpha by transition.animateFloat(0.82f, 1f, infiniteRepeatable(tween(1800), RepeatMode.Reverse), label = "avatar pulse")
+    val initials = name.split(" ").filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }
+    Surface(modifier = modifier.size(64.dp).then(if (motionEnabled) Modifier.graphicsLayer { this.alpha = alpha } else Modifier), shape = androidx.compose.foundation.shape.CircleShape, color = PrimaryTealLight) {
+        Box(contentAlignment = Alignment.Center) { Text(initials, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold) }
     }
 }

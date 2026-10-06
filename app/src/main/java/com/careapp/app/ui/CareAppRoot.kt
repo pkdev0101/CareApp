@@ -1,6 +1,7 @@
 package com.careapp.app.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -15,6 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.TopAppBar
@@ -33,6 +37,9 @@ import com.careapp.app.ui.screens.*
 import com.careapp.app.ui.theme.CareAppTheme
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.*
+import com.careapp.app.util.CaregiverPinStore
+import com.careapp.app.util.MedicationReminderPreferences
+import com.careapp.app.util.NotificationHelper
 
 enum class CareAppScreen {
     Home,
@@ -51,21 +58,82 @@ enum class CareAppScreen {
     DoctorSummary,
     QRCode,
     DemoMode
+    ,CareSetup, ManageMedications, ManagePeople, ManageRoutines, ManagePlaces, EmergencyProfile
+}
+
+private fun getTopBarTitle(route: String?, isCaregiverMode: Boolean): String? = when (route) {
+    CareAppScreen.Home.name -> if (isCaregiverMode) "Dashboard" else "CareApp"
+    CareAppScreen.Medication.name -> if (isCaregiverMode) "Medication Setup" else "Medicine"
+    CareAppScreen.Family.name -> "People"
+    CareAppScreen.Routine.name -> "Routines"
+    CareAppScreen.CaregiverNotes.name -> "Care Notes"
+    CareAppScreen.DoctorSummary.name -> "Reports"
+    CareAppScreen.Settings.name -> "Settings"
+    CareAppScreen.CalmMode.name -> "I Forgot"
+    CareAppScreen.Help.name -> "Help"
+    CareAppScreen.Emergency.name -> "Emergency Help"
+    CareAppScreen.Lost.name -> "I May Be Lost"
+    CareAppScreen.MedicationHistory.name -> "Medication History"
+    CareAppScreen.CareSnapshot.name -> "Care Snapshot"
+    CareAppScreen.DemoMode.name -> "Judge Demo"
+    CareAppScreen.CareSetup.name -> "Care Setup"
+    CareAppScreen.ManageMedications.name -> "Manage Medications"
+    CareAppScreen.ManagePeople.name -> "Manage People"
+    CareAppScreen.ManageRoutines.name -> "Manage Routines"
+    CareAppScreen.ManagePlaces.name -> "Manage Places"
+    CareAppScreen.EmergencyProfile.name -> "Emergency Profile"
+    CareAppScreen.QRCode.name -> "Emergency QR"
+    else -> null
+}
+
+private fun getTopBarIcon(route: String?): String = when (route) {
+    CareAppScreen.Home.name -> "⌂"
+    CareAppScreen.Medication.name, CareAppScreen.MedicationHistory.name -> "✚"
+    CareAppScreen.Family.name -> "◉"
+    CareAppScreen.Routine.name -> "▦"
+    CareAppScreen.CaregiverNotes.name, CareAppScreen.DoctorSummary.name -> "▤"
+    CareAppScreen.Emergency.name -> "!"
+    CareAppScreen.Lost.name -> "⌖"
+    CareAppScreen.Help.name, CareAppScreen.CalmMode.name -> "?"
+    CareAppScreen.QRCode.name -> "▣"
+    CareAppScreen.Settings.name -> "⚙"
+    CareAppScreen.CareSetup.name -> "◆"
+    else -> "•"
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun CareAppRoot() {
     val context = LocalContext.current
-    var isDarkMode by remember { mutableStateOf(false) }
     val modeViewModel: CareModeViewModel = viewModel(factory = CareModeViewModelFactory(context))
     val careMode by modeViewModel.mode.collectAsState()
     val isCaregiverMode = careMode == CareMode.CAREGIVER
+    val accessibilityViewModel: AccessibilityViewModel = viewModel(factory = AccessibilityViewModelFactory(context))
+    val textSizeScale by accessibilityViewModel.textSizeScale.collectAsState()
+    val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory(context))
+    val themeMode by themeViewModel.themeMode.collectAsState()
+    val caregiverPinStore = remember { CaregiverPinStore(context) }
+    var showCaregiverPinDialog by remember { mutableStateOf(false) }
+    var caregiverPin by remember { mutableStateOf("") }
+    var caregiverPinError by remember { mutableStateOf("") }
 
-    CareAppTheme(darkTheme = isDarkMode) {
+    CareAppTheme(
+        darkTheme = when (themeMode) {
+            ThemeViewModel.AppThemeMode.DARK -> true
+            ThemeViewModel.AppThemeMode.LIGHT -> false
+            ThemeViewModel.AppThemeMode.SYSTEM -> isSystemInDarkTheme()
+        },
+        textScale = textSizeScale
+    ) {
         val navController = rememberNavController()
         val repository = CareRepository.getInstance(context)
-        LaunchedEffect(repository) { repository.seedIfNeeded() }
+        val reminderPreferences = remember { MedicationReminderPreferences(context) }
+        LaunchedEffect(repository) {
+            repository.seedIfNeeded()
+            repository.getAllMedicationsSync().forEach {
+                if (reminderPreferences.isEnabled(it)) NotificationHelper.scheduleMedicationReminder(context, it)
+            }
+        }
         val medViewModel: MedicationViewModel = viewModel(factory = MedicationViewModelFactory(repository))
         val routineViewModel: RoutineViewModel = viewModel(factory = RoutineViewModelFactory(repository))
         val emergencyViewModel: EmergencyViewModel = viewModel(factory = EmergencyViewModelFactory(repository))
@@ -73,36 +141,67 @@ fun CareAppRoot() {
         val memoryViewModel: MemoryCardViewModel = viewModel(factory = MemoryCardViewModelFactory(repository))
         val caregiverViewModel: CaregiverNotesViewModel = viewModel(factory = CaregiverNotesViewModelFactory(repository))
         val dashboardViewModel: DashboardViewModel = viewModel(factory = DashboardViewModelFactory(repository))
-        val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory())
-        val accessibilityViewModel: AccessibilityViewModel = viewModel()
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+        val detailRoute = currentRoute in setOf(
+            CareAppScreen.MedicationHistory.name, CareAppScreen.CareSnapshot.name,
+            CareAppScreen.DoctorSummary.name, CareAppScreen.DemoMode.name, CareAppScreen.QRCode.name,
+            CareAppScreen.CareSetup.name, CareAppScreen.ManageMedications.name, CareAppScreen.ManagePeople.name,
+            CareAppScreen.ManageRoutines.name, CareAppScreen.ManagePlaces.name
+            ,CareAppScreen.EmergencyProfile.name
+        )
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
+                    navigationIcon = {
+                        if (detailRoute) IconButton(onClick = { navController.popBackStack() }) { Text("‹", fontSize = 36.sp) }
+                    },
                     title = {
-                        Text(
-                            "CareApp${if (isCaregiverMode) " (Caregiver)" else ""}",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column {
+                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                Surface(
+                                    modifier = Modifier.size(30.dp),
+                                    shape = androidx.compose.foundation.shape.CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer
+                                ) {
+                                    Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
+                                        Text("C", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                    }
+                                }
+                                Spacer(Modifier.width(6.dp))
+                                Text("CareApp", fontSize = 19.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                            val section = getTopBarTitle(currentRoute, isCaregiverMode)
+                            if (section != null && section != "CareApp") {
+                                Text(
+                                    "$section · ${if (isCaregiverMode) "Caregiver mode" else "Senior mode"}",
+                                    fontSize = 12.sp,
+                                    color = PrimaryTealVeryLight
+                                )
+                            }
+                        }
                     },
                     actions = {
-                        TextButton(
+                        Button(
                             onClick = {
-                                val wasCaregiver = isCaregiverMode
-                                modeViewModel.toggleMode()
+                                if (isCaregiverMode) {
+                                    modeViewModel.toggleMode()
+                                    navController.navigate(CareAppScreen.Home.name) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+                                        launchSingleTop = true
+                                    }
+                                } else {
+                                    caregiverPin = ""
+                                    caregiverPinError = ""
+                                    showCaregiverPinDialog = true
+                                }
                             },
-                            modifier = Modifier.padding(horizontal = 2.dp)
+                            modifier = Modifier.padding(horizontal = 4.dp).heightIn(min = 48.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SecondaryCoralDark, contentColor = Color.White)
                         ) {
-                            Text(if (isCaregiverMode) "Senior Mode" else "Caregiver Mode", fontSize = 12.sp)
-                        }
-                        if (isCaregiverMode) Button(
-                            onClick = { isDarkMode = !isDarkMode },
-                            modifier = Modifier.padding(horizontal = 4.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = if (isDarkMode) Color.Gray else Color.White),
-                            contentPadding = PaddingValues(4.dp)
-                        ) {
-                            Text(if (isDarkMode) "☀️" else "🌙", fontSize = 16.sp)
+                            Text(if (isCaregiverMode) "Switch to Senior" else "Switch to Caregiver", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = PrimaryTeal)
@@ -128,13 +227,13 @@ fun CareAppRoot() {
                     HomeScreen(navController, dashboardViewModel)
                 }
                 composable(CareAppScreen.Medication.name) {
-                    MedicationScreen(viewModel = medViewModel, navController = navController)
+                    MedicationScreen(viewModel = medViewModel, navController = navController, isCaregiverMode = isCaregiverMode)
                 }
                 composable(CareAppScreen.Family.name) {
                     MemoryCardsScreen(viewModel = memoryViewModel)
                 }
                 composable(CareAppScreen.Routine.name) {
-                    RoutineScreen(viewModel = routineViewModel)
+                    RoutineScreen(viewModel = routineViewModel, isCaregiverMode = isCaregiverMode, navController = navController)
                 }
                 composable(CareAppScreen.CaregiverNotes.name) {
                     CaregiverNotesScreen(viewModel = caregiverViewModel)
@@ -146,7 +245,7 @@ fun CareAppRoot() {
                     LostModeScreen(viewModel = locationViewModel, navController = navController)
                 }
                 composable(CareAppScreen.Help.name) {
-                    HelpScreen(navController = navController, emergencyViewModel = emergencyViewModel)
+                    HelpScreen(navController = navController, emergencyViewModel = emergencyViewModel, locationViewModel = locationViewModel)
                 }
                 composable(CareAppScreen.CalmMode.name) {
                     CalmModeScreen(navController = navController, viewModel = memoryViewModel)
@@ -155,13 +254,13 @@ fun CareAppRoot() {
                     CareSnapshotScreen(navController)
                 }
                 composable(CareAppScreen.MedicationHistory.name) {
-                    MedicationHistoryScreen(viewModel = viewModel(factory = MedicationHistoryViewModelFactory(repository)))
+                    MedicationHistoryScreen(navController = navController, viewModel = viewModel(factory = MedicationHistoryViewModelFactory(repository)))
                 }
                 composable(CareAppScreen.SafetyReadiness.name) {
                     SafetyReadinessScreen()
                 }
                 composable(CareAppScreen.Settings.name) {
-                    SettingsScreen(viewModel = accessibilityViewModel, navController = navController, isCaregiverMode = isCaregiverMode)
+                    SettingsScreen(viewModel = accessibilityViewModel, navController = navController, isCaregiverMode = isCaregiverMode, themeMode = themeMode, onThemeModeChange = themeViewModel::setThemeMode)
                 }
                 composable(CareAppScreen.DoctorSummary.name) {
                     DoctorSummaryScreen(navController)
@@ -172,7 +271,52 @@ fun CareAppRoot() {
                 composable(CareAppScreen.DemoMode.name) {
                     DemoModeScreen(navController)
                 }
+                composable(CareAppScreen.CareSetup.name) {
+                    CareSetupScreen(repository = repository, navController = navController)
+                }
+                composable(CareAppScreen.ManageMedications.name) { CareManagementScreen(CareManagementType.MEDICATIONS, repository) }
+                composable(CareAppScreen.ManagePeople.name) { CareManagementScreen(CareManagementType.PEOPLE, repository) }
+                composable(CareAppScreen.ManageRoutines.name) { CareManagementScreen(CareManagementType.ROUTINES, repository) }
+                composable(CareAppScreen.ManagePlaces.name) { CareManagementScreen(CareManagementType.PLACES, repository) }
+                composable(CareAppScreen.EmergencyProfile.name) { EmergencyProfileScreen() }
             }
+        }
+        if (showCaregiverPinDialog) {
+            val hasPin = caregiverPinStore.hasPin()
+            AlertDialog(
+                onDismissRequest = { showCaregiverPinDialog = false },
+                title = { Text(if (hasPin) "Enter Caregiver PIN" else "Create Caregiver PIN") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(if (hasPin) "Enter the 4–6 digit PIN to open caregiver tools." else "Create a 4–6 digit PIN. Caregiver Mode manages medication and safety information.")
+                        OutlinedTextField(
+                            value = caregiverPin,
+                            onValueChange = { value -> caregiverPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
+                            label = { Text("PIN") },
+                            singleLine = true
+                        )
+                        if (caregiverPinError.isNotBlank()) Text(caregiverPinError, color = DangerRed, fontSize = 13.sp)
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        if (caregiverPin.length !in 4..6) {
+                            caregiverPinError = "PIN must contain 4 to 6 digits."
+                        } else if (hasPin && !caregiverPinStore.matches(caregiverPin)) {
+                            caregiverPinError = "That PIN does not match."
+                        } else {
+                            if (!hasPin) caregiverPinStore.setPin(caregiverPin)
+                            showCaregiverPinDialog = false
+                            modeViewModel.toggleMode()
+                            navController.navigate(CareAppScreen.Home.name) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = false }
+                                launchSingleTop = true
+                            }
+                        }
+                    }) { Text(if (hasPin) "Unlock Caregiver Mode" else "Save PIN and Continue") }
+                },
+                dismissButton = { TextButton(onClick = { showCaregiverPinDialog = false }) { Text("Cancel") } }
+            )
         }
     }
 }
@@ -192,7 +336,7 @@ fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = fa
     ) {
         val legacyScreens = if (isCaregiverMode) {
             listOf(
-                NavBarItem(CareAppScreen.Routine, "📅", "Routine"),
+                NavBarItem(CareAppScreen.Routine, "▦", "Routine"),
                 NavBarItem(CareAppScreen.Medication, "💊", "Medicine"),
                 NavBarItem(CareAppScreen.CaregiverNotes, "📝", "Notes"),
                 NavBarItem(CareAppScreen.DoctorSummary, "📋", "Report"),
@@ -242,12 +386,12 @@ fun BottomNavBar(navController: NavHostController, isCaregiverMode: Boolean = fa
                 },
                 selected = isSelected,
                 onClick = {
-                    navController.navigate(item.screen.name) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+                    if (!navController.popBackStack(item.screen.name, false) && currentDestination?.route != item.screen.name) {
+                        navController.navigate(item.screen.name) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(

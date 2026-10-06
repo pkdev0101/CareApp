@@ -14,6 +14,7 @@ import com.careapp.app.data.dao.MedicationDao
 import com.careapp.app.data.dao.RoutineDao
 import com.careapp.app.data.dao.MemoryCardDao
 import com.careapp.app.data.dao.CaregiverNoteDao
+import com.careapp.app.data.dao.SavedPlaceDao
 
 @Database(
     entities = [
@@ -32,6 +33,7 @@ abstract class CareAppDatabase : RoomDatabase() {
     abstract fun routineDao(): RoutineDao
     abstract fun memoryCardDao(): MemoryCardDao
     abstract fun caregiverNoteDao(): CaregiverNoteDao
+    abstract fun savedPlaceDao(): SavedPlaceDao
 
     companion object {
         @Volatile

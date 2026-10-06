@@ -31,8 +31,8 @@ fun MedicationCard(
             .fillMaxWidth()
             .padding(vertical = 12.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AccentAmberLight),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -52,13 +52,13 @@ fun MedicationCard(
                 text = medication.name,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = TextDark
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(text = "Dose: ${medication.dose}", fontSize = 16.sp)
-            Text(text = "Instructions: ${medication.instructions}", fontSize = 14.sp)
+            Text(text = "Dose: ${medication.dose}", fontSize = 16.sp, color = TextDark)
+            Text(text = "Instructions: ${medication.instructions}", fontSize = 14.sp, color = TextGray)
             Text(
                 text = "Pill: ${medication.pillDescription}",
                 fontSize = 14.sp,
@@ -73,7 +73,7 @@ fun MedicationCard(
             ) {
                 Button(
                     onClick = onTakeMedicine,
-                    colors = ButtonDefaults.buttonColors(containerColor = SuccessTeal),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryTealLight),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -82,7 +82,7 @@ fun MedicationCard(
 
                 Button(
                     onClick = onRemindLater,
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentAmber),
+                    colors = ButtonDefaults.buttonColors(containerColor = BackgroundMedium),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp)
                 ) {

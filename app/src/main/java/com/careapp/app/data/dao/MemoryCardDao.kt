@@ -15,6 +15,9 @@ interface MemoryCardDao {
     @Query("SELECT * FROM memory_cards ORDER BY name ASC")
     fun getAllMemoryCards(): Flow<List<MemoryCard>>
 
+    @Query("SELECT * FROM memory_cards ORDER BY name ASC")
+    suspend fun getAllMemoryCardsSync(): List<MemoryCard>
+
     @Query("SELECT * FROM memory_cards WHERE id = :cardId")
     suspend fun getMemoryCardById(cardId: Int): MemoryCard?
 

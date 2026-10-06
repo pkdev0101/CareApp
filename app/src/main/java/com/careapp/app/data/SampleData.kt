@@ -51,6 +51,28 @@ object SampleData {
             reason = "Blood pressure",
             doctor = "Dr. Patel",
             caregiverConfirmationRequired = false
+        ),
+        Medication(
+            id = 4,
+            name = "Vitamin D",
+            dose = "1 capsule",
+            scheduledTime = "9:00 AM",
+            instructions = "Take with breakfast",
+            pillDescription = "Small softgel",
+            reason = "Daily supplement",
+            doctor = "Dr. Patel",
+            caregiverConfirmationRequired = false
+        ),
+        Medication(
+            id = 5,
+            name = "Acetaminophen",
+            dose = "As directed",
+            scheduledTime = "As needed",
+            instructions = "Use only as entered by caregiver or clinician",
+            pillDescription = "White tablet",
+            reason = "Pain relief",
+            doctor = "Dr. Patel",
+            caregiverConfirmationRequired = true
         )
     )
 
@@ -91,6 +113,20 @@ object SampleData {
             category = "Evening",
             suggestedTime = "6:00 PM",
             completed = false
+        ),
+        RoutineTask(
+            id = 6,
+            title = "Eat lunch",
+            category = "Afternoon",
+            suggestedTime = "12:30 PM",
+            completed = false
+        ),
+        RoutineTask(
+            id = 7,
+            title = "Call Maya",
+            category = "Evening",
+            suggestedTime = "5:00 PM",
+            completed = false
         )
     )
 
@@ -118,6 +154,22 @@ object SampleData {
             memoryCue = "Lives next door",
             helpsWith = "Garden and daily help",
             phone = "555-345-6789"
+        ),
+        MemoryCard(
+            id = 4,
+            name = "Daniel Lee",
+            relationship = "Family member",
+            memoryCue = "He calls on Wednesday evenings",
+            helpsWith = "Family check-ins",
+            phone = "555-456-7890"
+        ),
+        MemoryCard(
+            id = 5,
+            name = "Care Team",
+            relationship = "Support team",
+            memoryCue = "Call for help with care questions",
+            helpsWith = "Care coordination",
+            phone = "555-567-8901"
         )
     )
 

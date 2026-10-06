@@ -130,7 +130,7 @@ fun QRCodeScreen() {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Quick Emergency Info",
+                        text = "Emergency Card & QR",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryTeal

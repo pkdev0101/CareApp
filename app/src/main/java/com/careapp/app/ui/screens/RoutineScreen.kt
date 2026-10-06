@@ -15,9 +15,11 @@ import com.careapp.app.data.RoutineTask
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.RoutineViewModel
+import androidx.navigation.NavController
+import com.careapp.app.ui.CareAppScreen
 
 @Composable
-fun RoutineScreen(viewModel: RoutineViewModel? = null) {
+fun RoutineScreen(viewModel: RoutineViewModel? = null, isCaregiverMode: Boolean = false, navController: NavController? = null) {
     val morning by (viewModel?.morningTasks?.collectAsState() ?: remember { mutableStateOf(SampleData.routineTasks.filter { it.category == "Morning" }) })
     val afternoon by (viewModel?.afternoonTasks?.collectAsState() ?: remember { mutableStateOf(SampleData.routineTasks.filter { it.category == "Afternoon" }) })
     val evening by (viewModel?.eveningTasks?.collectAsState() ?: remember { mutableStateOf(SampleData.routineTasks.filter { it.category == "Evening" }) })
@@ -26,7 +28,8 @@ fun RoutineScreen(viewModel: RoutineViewModel? = null) {
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
     LazyColumn(Modifier.fillMaxSize().background(BackgroundLight).padding(16.dp)) {
         item { Text("My Routine", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal, modifier = Modifier.padding(vertical = 16.dp)) }
-        item { Text("Tap a task when it is complete.", fontSize = 18.sp, color = Color.DarkGray, modifier = Modifier.padding(bottom = 8.dp)) }
+        item { Text(if (isCaregiverMode) "Review the routine, or open Care Setup to edit it." else "Tap a task when it is complete.", fontSize = 18.sp, color = Color.DarkGray, modifier = Modifier.padding(bottom = 8.dp)) }
+        if (isCaregiverMode) item { Button(onClick = { navController?.navigate(CareAppScreen.CareSetup.name) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Edit routines in Care Setup") } }
         item { RoutineSection("Morning", morning, viewModel) }
         item { RoutineSection("Afternoon", afternoon, viewModel) }
         item { RoutineSection("Evening", evening, viewModel) }

@@ -58,10 +58,18 @@ class DashboardViewModelFactory(private val repository: CareRepository) : ViewMo
     override fun <T : ViewModel> create(modelClass: Class<T>): T = DashboardViewModel(repository) as T
 }
 
-class ThemeViewModelFactory : ViewModelProvider.Factory {
+class ThemeViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return ThemeViewModel() as T
+        val preferences = context.applicationContext.getSharedPreferences("careapp_preferences", Context.MODE_PRIVATE)
+        return ThemeViewModel(preferences) as T
+    }
+}
+
+class AccessibilityViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        val preferences = context.applicationContext.getSharedPreferences("careapp_preferences", Context.MODE_PRIVATE)
+        return AccessibilityViewModel(preferences) as T
     }
 }
 

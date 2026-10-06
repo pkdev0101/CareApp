@@ -19,11 +19,12 @@ import androidx.compose.ui.unit.sp
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.MedicationHistoryViewModel
+import androidx.navigation.NavController
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MedicationHistoryScreen(viewModel: MedicationHistoryViewModel? = null) {
+fun MedicationHistoryScreen(navController: NavController? = null, viewModel: MedicationHistoryViewModel? = null) {
     val grouped by (viewModel?.historyEntries?.collectAsState()
         ?: remember { mutableStateOf(emptyMap<LocalDate, List<MedicationHistoryViewModel.HistoryEntry>>()) })
     val fallback = SampleData.medications.map { medication ->
@@ -31,13 +32,14 @@ fun MedicationHistoryScreen(viewModel: MedicationHistoryViewModel? = null) {
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(BackgroundLight).padding(16.dp),
+        modifier = Modifier.fillMaxSize().background(BackgroundLight).padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.Top
     ) {
         item {
-            Text("Medication History", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal, modifier = Modifier.padding(vertical = 16.dp))
             Text("The last 7 days", fontSize = 18.sp, color = Color.DarkGray, modifier = Modifier.padding(bottom = 8.dp))
         }
+        item { OutlinedButton(onClick = { navController?.popBackStack() }, modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) { Text("Back to Medicine") } }
         if (grouped.isEmpty()) {
             item { entriesForDate(fallback, LocalDate.now()) }
         } else {
