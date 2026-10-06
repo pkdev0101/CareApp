@@ -312,6 +312,11 @@ fun CareAppRoot() {
                             else if (hasPin) "Enter the 4–6 digit PIN to open caregiver tools."
                             else "Create a 4–6 digit PIN. Caregiver Mode manages medication and safety information."
                         )
+                        if (hasPin) {
+                            Text("Temporary demo PIN display — hide or remove before production use.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                            Text("Supervisor PIN: ${caregiverPinStore.supervisorPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                            Text("Caregiver PIN: ${caregiverPinStore.caregiverPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                        }
                         if (!showSupervisorReset) {
                             OutlinedTextField(
                                 value = caregiverPin,

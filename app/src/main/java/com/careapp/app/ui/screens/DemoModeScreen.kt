@@ -6,16 +6,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.careapp.app.ui.CareAppScreen
-import com.careapp.app.ui.components.CareSectionCard
 import com.careapp.app.ui.theme.*
-import com.careapp.app.util.CaregiverPinStore
 
 private data class DemoStep(val title: String, val description: String, val route: CareAppScreen)
 
@@ -33,9 +30,6 @@ fun DemoModeScreen(navController: NavController? = null) {
         DemoStep("Care Snapshot", "Share a one-page profile with a helper or doctor.", CareAppScreen.CareSnapshot)
     )
     var current by remember { mutableStateOf(0) }
-    var showPins by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    val pinStore = remember { CaregiverPinStore(context) }
     val step = steps[current]
 
     LazyColumn(modifier = Modifier.fillMaxSize().background(BackgroundLight).padding(16.dp)) {
@@ -58,18 +52,6 @@ fun DemoModeScreen(navController: NavController? = null) {
             Button(onClick = { if (current < steps.lastIndex) current++ else navController?.popBackStack() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = SecondaryCoral)) { Text(if (current < steps.lastIndex) "Next" else "Finish Demo") }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = { navController?.popBackStack() }, modifier = Modifier.fillMaxWidth()) { Text("Skip Demo") }
-        }
-        item {
-            CareSectionCard("Temporary PIN display") {
-                Text("For local demo testing only. Do not use this screen to expose PINs in a real deployment.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
-                OutlinedButton(onClick = { showPins = !showPins }, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (showPins) "Hide PINs" else "Show PINs temporarily")
-                }
-                if (showPins) {
-                    Text("Supervisor PIN: ${pinStore.supervisorPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                    Text("Caregiver PIN: ${pinStore.caregiverPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                }
-            }
         }
     }
 }
