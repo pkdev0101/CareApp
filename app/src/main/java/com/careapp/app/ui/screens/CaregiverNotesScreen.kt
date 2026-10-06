@@ -18,7 +18,7 @@ import com.careapp.app.util.CaregiverAuditStore
 fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
     val context = LocalContext.current
     val auditStore = remember { CaregiverAuditStore(context) }
-    val auditSummary = remember { auditStore.handoffSummary() }
+    var auditSummary by remember { mutableStateOf(auditStore.handoffSummary()) }
     val note by (viewModel?.noteContent?.collectAsState() ?: remember { mutableStateOf("") })
     val mood by (viewModel?.mood?.collectAsState() ?: remember { mutableStateOf("Calm") })
     val sleep by (viewModel?.sleepQuality?.collectAsState() ?: remember { mutableStateOf("Good") })
@@ -30,6 +30,7 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
     var dinner by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         viewModel?.refreshTodayNote()
+        auditSummary = auditStore.handoffSummary()
     }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Caregiver Handoff", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground) }
@@ -41,7 +42,16 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
         item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("Calm", "Happy", "Worried", "Tired").forEach { value -> FilterChip(selected = mood == value, onClick = { viewModel?.setMood(value) }, label = { Text(value) }) } } }
         item { Text("Sleep: $sleep", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         item { Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { listOf("Good", "Okay", "Poor").forEach { value -> FilterChip(selected = sleep == value, onClick = { viewModel?.setSleepQuality(value) }, label = { Text(value) }) } } }
-        item { Button(onClick = { viewModel?.saveNote() }, modifier = Modifier.fillMaxWidth()) { Text("Save Handoff Note") } }
+        item {
+            Button(
+                onClick = {
+                    viewModel?.saveNote()
+                    auditStore.record("Caregiver handoff note updated")
+                    auditSummary = auditStore.handoffSummary()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("Save Handoff Note") }
+        }
         item { OutlinedButton(onClick = { viewModel?.generateHandoffSummary() }, modifier = Modifier.fillMaxWidth()) { Text("Generate Handoff Summary") } }
         item {
             OutlinedButton(
