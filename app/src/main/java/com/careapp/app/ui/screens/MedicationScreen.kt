@@ -49,8 +49,7 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
         item {
             Text(
                 text = if (isCaregiverMode) "Medication management" else "Today's medicine",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(vertical = 8.dp)
             )

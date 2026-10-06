@@ -37,7 +37,7 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
-            Text("Settings", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+            Text("Settings", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground)
             Text("Adjust CareApp for the person using it.", style = MaterialTheme.typography.bodyLarge)
         }
         if (isCaregiverMode) {

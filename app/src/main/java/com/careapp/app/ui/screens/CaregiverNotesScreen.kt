@@ -29,7 +29,7 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
     var lunch by remember { mutableStateOf(false) }
     var dinner by remember { mutableStateOf(false) }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Text("Caregiver Handoff", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal) }
+        item { Text("Caregiver Handoff", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground) }
         item { Text("Record a few simple observations for the next caregiver.", fontSize = 18.sp) }
         item { Text("Meals", fontSize = 20.sp, fontWeight = FontWeight.Bold) }
         item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) { MealCheck("Breakfast", breakfast) { breakfast = !breakfast; viewModel?.toggleBreakfast() }; MealCheck("Lunch", lunch) { lunch = !lunch; viewModel?.toggleLunch() }; MealCheck("Dinner", dinner) { dinner = !dinner; viewModel?.toggleDinner() } } }

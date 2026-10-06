@@ -68,8 +68,7 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
         ) {
             Text(
                 text = "📋 Weekly Care Report",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onPrimary
             )
             Spacer(modifier = Modifier.height(4.dp))
