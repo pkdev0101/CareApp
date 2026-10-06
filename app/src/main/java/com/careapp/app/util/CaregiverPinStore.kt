@@ -17,13 +17,14 @@ class CaregiverPinStore(context: Context) {
 
     fun matches(pin: String): Boolean = preferences.getString("caregiver_pin", null) == pin
 
+    fun caregiverPin(): String = preferences.getString("caregiver_pin", "").orEmpty()
+
     fun setCaregiverPin(pin: String) {
         preferences.edit().putString("caregiver_pin", pin).apply()
     }
 
-    fun matchesSupervisor(pin: String): Boolean {
-        val supervisorPin = preferences.getString("supervisor_pin", null)
-            ?: preferences.getString("caregiver_pin", null)
-        return supervisorPin == pin
-    }
+    fun matchesSupervisor(pin: String): Boolean = supervisorPin() == pin
+
+    fun supervisorPin(): String = preferences.getString("supervisor_pin", null)
+        ?: preferences.getString("caregiver_pin", "").orEmpty()
 }
