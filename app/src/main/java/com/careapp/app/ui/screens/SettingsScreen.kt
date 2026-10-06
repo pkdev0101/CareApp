@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -37,6 +38,10 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
     var currentSupervisorPin by remember { mutableStateOf("") }
     var newSupervisorPin by remember { mutableStateOf("") }
     var supervisorPinMessage by remember { mutableStateOf("") }
+    var showCurrentCaregiverPin by remember { mutableStateOf(false) }
+    var showNewCaregiverPin by remember { mutableStateOf(false) }
+    var showCurrentSupervisorPin by remember { mutableStateOf(false) }
+    var showNewSupervisorPin by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -55,9 +60,9 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
                 }
             }
             item { Text("The top-right mode button returns to Senior Mode and takes you back to Home.", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            item { SettingsActionCard("Change Caregiver PIN", "Requires the current master PIN. The new PIN must contain 4–6 digits.", "Change PIN") { currentPin = ""; newPin = ""; pinMessage = ""; showPinDialog = true } }
+            item { SettingsActionCard("Change Caregiver PIN", "Requires the current master PIN. The new PIN must contain 4–6 digits.", "Change PIN") { currentPin = ""; newPin = ""; pinMessage = ""; showCurrentCaregiverPin = false; showNewCaregiverPin = false; showPinDialog = true } }
         }
-        item { SettingsActionCard("Change Supervisor PIN", "Controls caregiver PIN recovery and caregiver access administration.", "Change Supervisor PIN") { currentSupervisorPin = ""; newSupervisorPin = ""; supervisorPinMessage = ""; showSupervisorPinDialog = true } }
+        item { SettingsActionCard("Change Supervisor PIN", "Controls caregiver PIN recovery and caregiver access administration.", "Change Supervisor PIN") { currentSupervisorPin = ""; newSupervisorPin = ""; supervisorPinMessage = ""; showCurrentSupervisorPin = false; showNewSupervisorPin = false; showSupervisorPinDialog = true } }
         item { SectionLabel("Accessibility") }
         item {
             SettingsCard("Text size") {
@@ -114,8 +119,8 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         title = { Text("Change caregiver PIN") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("The supervisor PIN authorizes caregiver PIN changes.")
-            OutlinedTextField(currentPin, { currentPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
-            OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(6) }, label = { Text("New caregiver PIN") }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
+            OutlinedTextField(currentPin, { currentPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, visualTransformation = if (showCurrentCaregiverPin) VisualTransformation.None else PasswordVisualTransformation(), trailingIcon = { TextButton(onClick = { showCurrentCaregiverPin = !showCurrentCaregiverPin }) { Text(if (showCurrentCaregiverPin) "Hide" else "Show") } }, singleLine = true)
+            OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(6) }, label = { Text("New caregiver PIN") }, visualTransformation = if (showNewCaregiverPin) VisualTransformation.None else PasswordVisualTransformation(), trailingIcon = { TextButton(onClick = { showNewCaregiverPin = !showNewCaregiverPin }) { Text(if (showNewCaregiverPin) "Hide" else "Show") } }, singleLine = true)
             if (pinMessage.isNotBlank()) Text(pinMessage, color = MaterialTheme.colorScheme.error)
         } },
         confirmButton = { Button(onClick = { if (!pinStore.matchesSupervisor(currentPin)) pinMessage = "Current supervisor PIN is incorrect." else if (newPin.length !in 4..6) pinMessage = "New PIN must contain 4 to 6 digits." else { pinStore.setCaregiverPin(newPin); auditStore.record("Caregiver PIN changed"); showPinDialog = false } }) { Text("Save PIN") } },
@@ -126,8 +131,8 @@ fun SettingsScreen(viewModel: AccessibilityViewModel? = null, navController: Nav
         title = { Text("Change supervisor PIN") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("This PIN controls caregiver access recovery. Keep it with the supervisor.")
-            OutlinedTextField(currentSupervisorPin, { currentSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
-            OutlinedTextField(newSupervisorPin, { newSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("New supervisor PIN") }, visualTransformation = PasswordVisualTransformation(), singleLine = true)
+            OutlinedTextField(currentSupervisorPin, { currentSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("Current supervisor PIN") }, visualTransformation = if (showCurrentSupervisorPin) VisualTransformation.None else PasswordVisualTransformation(), trailingIcon = { TextButton(onClick = { showCurrentSupervisorPin = !showCurrentSupervisorPin }) { Text(if (showCurrentSupervisorPin) "Hide" else "Show") } }, singleLine = true)
+            OutlinedTextField(newSupervisorPin, { newSupervisorPin = it.filter(Char::isDigit).take(6) }, label = { Text("New supervisor PIN") }, visualTransformation = if (showNewSupervisorPin) VisualTransformation.None else PasswordVisualTransformation(), trailingIcon = { TextButton(onClick = { showNewSupervisorPin = !showNewSupervisorPin }) { Text(if (showNewSupervisorPin) "Hide" else "Show") } }, singleLine = true)
             if (supervisorPinMessage.isNotBlank()) Text(supervisorPinMessage, color = MaterialTheme.colorScheme.error)
         } },
         confirmButton = { Button(onClick = { if (!pinStore.matchesSupervisor(currentSupervisorPin)) supervisorPinMessage = "Current supervisor PIN is incorrect." else if (newSupervisorPin.length !in 4..6) supervisorPinMessage = "New PIN must contain 4 to 6 digits." else { pinStore.setSupervisorPin(newSupervisorPin); auditStore.record("Supervisor PIN changed"); showSupervisorPinDialog = false } }) { Text("Save Supervisor PIN") } },

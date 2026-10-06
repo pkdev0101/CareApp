@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Density
@@ -123,6 +124,9 @@ fun CareAppRoot() {
     var showSupervisorReset by remember { mutableStateOf(false) }
     var supervisorPin by remember { mutableStateOf("") }
     var replacementCaregiverPin by remember { mutableStateOf("") }
+    var showCaregiverPin by remember { mutableStateOf(false) }
+    var showSupervisorPin by remember { mutableStateOf(false) }
+    var showReplacementPin by remember { mutableStateOf(false) }
 
     CareAppTheme(
         darkTheme = when (themeMode) {
@@ -214,6 +218,9 @@ fun CareAppRoot() {
                                     showSupervisorReset = false
                                     supervisorPin = ""
                                     replacementCaregiverPin = ""
+                                    showCaregiverPin = false
+                                    showSupervisorPin = false
+                                    showReplacementPin = false
                                     showCaregiverPinDialog = true
                                 }
                             },
@@ -315,15 +322,16 @@ fun CareAppRoot() {
                         )
                         if (hasPin) {
                             Text("Temporary demo PIN display — hide or remove before production use.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-                            Text("Supervisor PIN: ${"*".repeat(caregiverPinStore.supervisorPin().length.coerceAtLeast(4))}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                            Text("Caregiver PIN: ${"*".repeat(caregiverPinStore.caregiverPin().length.coerceAtLeast(4))}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                            Text("Supervisor PIN: ${caregiverPinStore.supervisorPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                            Text("Caregiver PIN: ${caregiverPinStore.caregiverPin()}", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                         }
                         if (!showSupervisorReset) {
                             OutlinedTextField(
                                 value = caregiverPin,
                                 onValueChange = { value -> caregiverPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
                                 label = { Text("PIN") },
-                                visualTransformation = PasswordVisualTransformation(),
+                                visualTransformation = if (showCaregiverPin) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = { TextButton(onClick = { showCaregiverPin = !showCaregiverPin }) { Text(if (showCaregiverPin) "Hide" else "Show") } },
                                 singleLine = true
                             )
                         }
@@ -333,14 +341,16 @@ fun CareAppRoot() {
                                 value = supervisorPin,
                                 onValueChange = { value -> supervisorPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
                                 label = { Text("Supervisor PIN") },
-                                visualTransformation = PasswordVisualTransformation(),
+                                visualTransformation = if (showSupervisorPin) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = { TextButton(onClick = { showSupervisorPin = !showSupervisorPin }) { Text(if (showSupervisorPin) "Hide" else "Show") } },
                                 singleLine = true
                             )
                             OutlinedTextField(
                                 value = replacementCaregiverPin,
                                 onValueChange = { value -> replacementCaregiverPin = value.filter(Char::isDigit).take(6); caregiverPinError = "" },
                                 label = { Text("New caregiver PIN") },
-                                visualTransformation = PasswordVisualTransformation(),
+                                visualTransformation = if (showReplacementPin) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = { TextButton(onClick = { showReplacementPin = !showReplacementPin }) { Text(if (showReplacementPin) "Hide" else "Show") } },
                                 singleLine = true
                             )
                         } else if (hasPin && caregiverPinAttempts > 0) {
