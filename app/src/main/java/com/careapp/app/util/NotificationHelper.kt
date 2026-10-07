@@ -1,10 +1,14 @@
 package com.careapp.app.util
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
+import android.annotation.SuppressLint
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.careapp.app.R
 import com.careapp.app.data.Medication
 import java.time.LocalDateTime
@@ -34,6 +38,7 @@ object NotificationHelper {
             notificationManager.createNotificationChannel(medicationChannel)
 
             // Emergency alerts
+            @SuppressLint("WrongConstant")
             val emergencyChannel = NotificationChannel(
                 EMERGENCY_CHANNEL_ID,
                 "Emergency Alerts",
@@ -103,11 +108,13 @@ object NotificationHelper {
 
     fun showTestMedicationReminder(context: Context, medicationName: String = "Test medication") {
         createNotificationChannels(context)
-        runCatching {
-            androidx.core.app.NotificationManagerCompat.from(context).notify(
-                9001,
-                buildMedicationNotification(context, medicationName, "now").setContentText("Reminder test: $medicationName").build()
-            )
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            runCatching {
+                androidx.core.app.NotificationManagerCompat.from(context).notify(
+                    9001,
+                    buildMedicationNotification(context, medicationName, "now").setContentText("Reminder test: $medicationName").build()
+                )
+            }
         }
     }
 
