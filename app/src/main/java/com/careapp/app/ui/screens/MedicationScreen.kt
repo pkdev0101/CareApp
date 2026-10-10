@@ -1,5 +1,7 @@
 package com.careapp.app.ui.screens
 
+import android.app.TimePickerDialog
+import android.text.format.DateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,7 +39,29 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
     val duplicateWarningTime by (viewModel?.duplicateWarningTime?.collectAsState() ?: remember { mutableStateOf("") })
     val overdueMedications by (viewModel?.overdueMedications?.collectAsState() ?: remember { mutableStateOf(emptyList()) })
     val context = LocalContext.current
+    var pendingMedication by remember { mutableStateOf<com.careapp.app.data.Medication?>(null) }
     val sortedMedications = medications.sortedBy { medicationMinutesUntilNow(it.scheduledTime) }
+
+    pendingMedication?.let { medication ->
+        val now = LocalTime.now()
+        DisposableEffect(medication) {
+            val picker = TimePickerDialog(
+                context,
+                { _, hour, minute ->
+                    val selectedTime = LocalTime.of(hour, minute).format(DateTimeFormatter.ofPattern("HH:mm"))
+                    viewModel?.takeMedication(medication.id, medication, selectedTime)
+                    pendingMedication = null
+                },
+                now.hour,
+                now.minute,
+                DateFormat.is24HourFormat(context)
+            )
+            picker.setTitle("When did you take ${medication.name}?")
+            picker.setOnCancelListener { pendingMedication = null }
+            picker.show()
+            onDispose { picker.dismiss() }
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -76,7 +100,7 @@ fun MedicationScreen(viewModel: MedicationViewModel? = null, navController: NavC
                 sortedMedications.forEach { medication ->
                     MedicationCard(
                         medication = medication,
-                        onTakeMedicine = { viewModel?.takeMedication(medication.id, medication) },
+                        onTakeMedicine = { pendingMedication = medication },
                         onRemindLater = { viewModel?.remindLater(medication.id, medication) },
                         onNeedHelp = { viewModel?.needHelp(medication.id, medication) }
                     )

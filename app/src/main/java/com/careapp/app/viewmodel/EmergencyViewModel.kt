@@ -38,7 +38,7 @@ class EmergencyViewModel(private val repository: CareRepository) : ViewModel() {
     private val _showCountdown = MutableStateFlow(false)
     val showCountdown: StateFlow<Boolean> = _showCountdown.asStateFlow()
 
-    // Emergency card content (from EmergencyManager)
+    // Emergency card content
     private val _emergencyCardContent = MutableStateFlow("")
     val emergencyCardContent: StateFlow<String> = _emergencyCardContent.asStateFlow()
 

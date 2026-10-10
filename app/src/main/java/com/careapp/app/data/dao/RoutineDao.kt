@@ -6,9 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RoutineDao {
-    @Query("SELECT COUNT(*) FROM routine_tasks")
-    suspend fun countRoutineTasks(): Int
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRoutineTask(task: RoutineTask)
 
@@ -24,6 +21,4 @@ interface RoutineDao {
     @Delete
     suspend fun deleteRoutineTask(task: RoutineTask)
 
-    @Query("SELECT * FROM routine_tasks WHERE completed = 0")
-    suspend fun getIncompleteTasks(): List<RoutineTask>
 }

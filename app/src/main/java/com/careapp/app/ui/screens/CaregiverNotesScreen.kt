@@ -1,9 +1,7 @@
 package com.careapp.app.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -42,14 +40,14 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
         item { CareSectionCard("Notes") { OutlinedTextField(value = note, onValueChange = { viewModel?.updateNoteContent(it) }, modifier = Modifier.fillMaxWidth(), minLines = 4, label = { Text("Notes") }) } }
         item {
             CareSectionCard("Mood: $mood") {
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("Calm", "Happy", "Worried", "Tired").forEach { value ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(listOf("Calm", "Happy"), listOf("Worried", "Tired")).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { value ->
                         FilterChip(
                             selected = mood == value,
                             onClick = { viewModel?.setMood(value) },
+                            modifier = Modifier.heightIn(min = 48.dp),
                             label = { Text(value, maxLines = 1) },
                             colors = FilterChipDefaults.filterChipColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -57,17 +55,16 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                             )
-                        )
+                            )
+                            }
+                        }
                     }
                 }
             }
         }
         item {
             CareSectionCard("Sleep: $sleep") {
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Good", "Okay", "Poor").forEach { value ->
                         FilterChip(
                             selected = sleep == value,

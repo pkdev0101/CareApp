@@ -62,7 +62,7 @@ class MedicationViewModel(private val repository: CareRepository) : ViewModel() 
     }
 
     // ========== TAKE MEDICATION ==========
-    fun takeMedication(medicationId: Int, medication: Medication) {
+    fun takeMedication(medicationId: Int, medication: Medication, takenTime: String? = null) {
         viewModelScope.launch {
             val existingLog = repository.checkMedicationAlreadyTaken(medicationId, today)
 
@@ -72,7 +72,7 @@ class MedicationViewModel(private val repository: CareRepository) : ViewModel() 
                 _duplicateWarningTime.value = existingLog.completedTime ?: "unknown time"
             } else {
                 // Not taken yet - proceed
-                val currentTime = LocalTime.now().format(timeFormatter)
+                val currentTime = takenTime ?: LocalTime.now().format(timeFormatter)
                 val log = MedicationLog(
                     medicationId = medicationId,
                     date = today,

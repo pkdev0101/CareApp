@@ -7,9 +7,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MedicationDao {
-    @Query("SELECT COUNT(*) FROM medications")
-    suspend fun countMedications(): Int
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMedication(medication: Medication): Long
 
@@ -18,9 +15,6 @@ interface MedicationDao {
 
     @Query("SELECT * FROM medications ORDER BY scheduledTime ASC")
     suspend fun getAllMedicationsSync(): List<Medication>
-
-    @Query("SELECT * FROM medications WHERE id = :medicationId")
-    suspend fun getMedicationById(medicationId: Int): Medication?
 
     @Update
     suspend fun updateMedication(medication: Medication)
@@ -36,9 +30,6 @@ interface MedicationDao {
 
     @Query("SELECT * FROM medication_logs WHERE medicationId = :medicationId AND date = :date")
     suspend fun getMedicationLogForDay(medicationId: Int, date: String): MedicationLog?
-
-    @Query("SELECT * FROM medication_logs WHERE status = 'Missed' ORDER BY date DESC LIMIT 10")
-    suspend fun getRecentMissedMedications(): List<MedicationLog>
 
     @Query("SELECT * FROM medication_logs ORDER BY date DESC, completedTime DESC")
     suspend fun getAllMedicationLogs(): List<MedicationLog>

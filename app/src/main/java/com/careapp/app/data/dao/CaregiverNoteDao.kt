@@ -20,9 +20,4 @@ interface CaregiverNoteDao {
     @Update
     suspend fun updateCaregiverNote(note: CaregiverNote)
 
-    @Delete
-    suspend fun deleteCaregiverNote(note: CaregiverNote)
-
-    @Query("SELECT * FROM caregiver_notes ORDER BY date DESC LIMIT 1")
-    suspend fun getLatestCaregiverNote(): CaregiverNote?
 }
