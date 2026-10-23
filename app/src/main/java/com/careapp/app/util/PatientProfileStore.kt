@@ -1,26 +1,32 @@
 package com.careapp.app.util
 
 import android.content.Context
-import com.careapp.app.data.SampleData
 
 data class PatientProfileData(
     val name: String,
     val age: String,
     val dateOfBirth: String,
-    val photoUri: String? = null
+    val photoUri: String? = null,
+    val fullName: String = name,
+    val relationship: String = "",
+    val memoryNote: String = "",
+    val communicationStyle: String = ""
 )
 
 class PatientProfileStore(context: Context) {
     private val preferences = context.applicationContext
-        .getSharedPreferences("careapp_patient_profile", Context.MODE_PRIVATE)
+        .getSharedPreferences(if (DemoModeController.isActive(context)) "careapp_demo_patient_profile" else "careapp_patient_profile", Context.MODE_PRIVATE)
 
     fun load(): PatientProfileData {
-        val defaultProfile = SampleData.seniorProfile
         return PatientProfileData(
-            name = preferences.getString("patient_name", null).orEmpty().ifBlank { defaultProfile.preferredName },
-            age = preferences.getString("patient_age", null).orEmpty().ifBlank { calculateAge(defaultProfile.birthday) },
-            dateOfBirth = preferences.getString("patient_dob", null).orEmpty().ifBlank { defaultProfile.birthday },
-            photoUri = preferences.getString("patient_photo_uri", null)?.takeIf { it.isNotBlank() }
+            name = preferences.getString("patient_name", null).orEmpty(),
+            age = preferences.getString("patient_age", null).orEmpty(),
+            dateOfBirth = preferences.getString("patient_dob", null).orEmpty(),
+            photoUri = preferences.getString("patient_photo_uri", null)?.takeIf { it.isNotBlank() },
+            fullName = preferences.getString("patient_full_name", null).orEmpty().ifBlank { preferences.getString("patient_name", null).orEmpty() },
+            relationship = preferences.getString("patient_relationship", "").orEmpty(),
+            memoryNote = preferences.getString("patient_memory_note", "").orEmpty(),
+            communicationStyle = preferences.getString("patient_communication_style", "").orEmpty()
         )
     }
 
@@ -30,6 +36,10 @@ class PatientProfileStore(context: Context) {
             .putString("patient_age", profile.age.trim())
             .putString("patient_dob", profile.dateOfBirth.trim())
             .putString("patient_photo_uri", profile.photoUri.orEmpty())
+            .putString("patient_full_name", profile.fullName.trim())
+            .putString("patient_relationship", profile.relationship.trim())
+            .putString("patient_memory_note", profile.memoryNote.trim())
+            .putString("patient_communication_style", profile.communicationStyle.trim())
             .apply()
     }
 

@@ -3,11 +3,12 @@ package com.careapp.app.data.repository
 import android.content.Context
 import com.careapp.app.data.database.CareAppDatabase
 import com.careapp.app.data.*
+import com.careapp.app.util.DemoModeController
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
-class CareRepository private constructor(context: Context) {
-    private val database = CareAppDatabase.getDatabase(context)
+class CareRepository private constructor(context: Context, databaseName: String) {
+    private val database = CareAppDatabase.getDatabase(context, databaseName)
     private val medicationDao = database.medicationDao()
     private val routineDao = database.routineDao()
     private val memoryCardDao = database.memoryCardDao()
@@ -28,10 +29,42 @@ class CareRepository private constructor(context: Context) {
         )
     }
 
+    /** Seeds only the separate demo database. It never touches the real database. */
+    suspend fun seedDemoIfNeeded() {
+        val existingMedicationNames = medicationDao.getAllMedicationsSync().map { it.name }.toSet()
+        listOf(
+            Medication(name = "Demo Morning Medication", dose = "1 demo tablet", scheduledTime = "08:00", instructions = "Fictional presentation record only", pillDescription = "Demo label", reason = "Demo data only", doctor = "Demo profile"),
+            Medication(name = "Demo Evening Medication", dose = "1 demo tablet", scheduledTime = "18:00", instructions = "Fictional presentation record only", pillDescription = "Demo label", reason = "Demo data only", doctor = "Demo profile")
+        ).filterNot { it.name in existingMedicationNames }.forEach { medicationDao.insertMedication(it) }
+
+        val existingRoutineKeys = routineDao.getAllRoutineTasks().map { "${it.category}|${it.title}" }.toSet()
+        listOf(
+            RoutineTask(title = "Brush teeth", category = "Morning", suggestedTime = "8:30 AM"),
+            RoutineTask(title = "Get dressed", category = "Morning", suggestedTime = "8:45 AM"),
+            RoutineTask(title = "Put on shoes", category = "Morning", suggestedTime = "9:00 AM")
+        ).filterNot { "${it.category}|${it.title}" in existingRoutineKeys }.forEach { routineDao.insertRoutineTask(it) }
+        if (memoryCardDao.getAllMemoryCardsSync().isEmpty()) {
+            memoryCardDao.insertMemoryCard(MemoryCard(name = "Sarah Miller", relationship = "Daughter", memoryCue = "Fictional demo caregiver", helpsWith = "Demo care support", phone = "555-010-0199"))
+        }
+        if (savedPlaceDao.getAllPlacesSync().isEmpty()) {
+            savedPlaceDao.insertPlace(SavedPlace(name = "Demo Home", type = "Demo safe place", latitude = 0.0, longitude = 0.0, notes = "Fictional location — not real GPS"))
+        }
+        if (caregiverNoteDao.countNotes() == 0) caregiverNoteDao.insertCaregiverNote(CaregiverNote(date = LocalDate.now().toString(), nextSteps = "Family Visit at 2:00 PM — Sarah is visiting. Demo data only."))
+    }
+
     // ========== MEDICATION OPERATIONS ==========
     fun getAllMedications(): Flow<List<Medication>> = medicationDao.getAllMedications()
 
     suspend fun getAllMedicationsSync(): List<Medication> = medicationDao.getAllMedicationsSync()
+
+    suspend fun getAllMemoryCardsSync(): List<MemoryCard> = memoryCardDao.getAllMemoryCardsSync()
+
+    suspend fun getAllPlacesSync(): List<SavedPlace> = savedPlaceDao.getAllPlacesSync()
+
+    suspend fun hasAnyUserData(): Boolean = getAllMedicationsSync().isNotEmpty() ||
+        getAllRoutineTasksSync().isNotEmpty() ||
+        getAllMemoryCardsSync().isNotEmpty() ||
+        getAllPlacesSync().isNotEmpty()
 
     suspend fun insertMedication(medication: Medication): Medication = medication.copy(id = medicationDao.insertMedication(medication).toInt())
     suspend fun updateMedication(medication: Medication) { medicationDao.updateMedication(medication) }
@@ -51,6 +84,8 @@ class CareRepository private constructor(context: Context) {
 
     suspend fun insertRoutineTask(task: RoutineTask) { routineDao.insertRoutineTask(task) }
     suspend fun getAllRoutineTasksSync(): List<RoutineTask> = routineDao.getAllRoutineTasks()
+
+    fun getAllRoutineTasks(): Flow<List<RoutineTask>> = routineDao.getAllRoutineTasksFlow()
 
     suspend fun updateRoutineTask(task: RoutineTask) { routineDao.updateRoutineTask(task) }
     suspend fun deleteRoutineTask(task: RoutineTask) { routineDao.deleteRoutineTask(task) }
@@ -78,11 +113,22 @@ class CareRepository private constructor(context: Context) {
 
     companion object {
         @Volatile
-        private var instance: CareRepository? = null
+        private var realInstance: CareRepository? = null
+        private var demoInstance: CareRepository? = null
 
-        fun getInstance(context: Context): CareRepository =
-            instance ?: synchronized(this) {
-                CareRepository(context.applicationContext).also { instance = it }
+        fun getInstance(context: Context): CareRepository {
+            if (DemoModeController.isActive(context)) {
+                return synchronized(this) {
+                    demoInstance ?: CareRepository(context.applicationContext, "careanchor_demo_database").also { demoInstance = it }
+                }
             }
+            return synchronized(this) {
+                realInstance ?: CareRepository(context.applicationContext, "careanchor_database").also { realInstance = it }
+            }
+        }
+
+        fun getRealInstance(context: Context): CareRepository = synchronized(this) {
+            realInstance ?: CareRepository(context.applicationContext, "careanchor_database").also { realInstance = it }
+        }
     }
 }

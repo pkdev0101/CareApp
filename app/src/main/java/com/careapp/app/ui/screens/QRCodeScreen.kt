@@ -20,12 +20,15 @@ import androidx.compose.ui.unit.sp
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.theme.*
 import com.careapp.app.util.QRCodeGenerator
+import com.careapp.app.ui.components.SharePreviewDialog
 
 @Composable
 fun QRCodeScreen() {
     val context = LocalContext.current
     val senior = SampleData.seniorProfile
     var privacyLevel by remember { mutableStateOf("basic") }
+    var showSharePreview by remember { mutableStateOf(false) }
+    var pendingShareText by remember { mutableStateOf("") }
 
     // Generate QR code data
     val qrData = QRCodeGenerator.formatQRContent(senior, privacyLevel)
@@ -38,17 +41,8 @@ fun QRCodeScreen() {
     }
 
     fun shareQRCode() {
-        try {
-            val intent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, "Emergency QR Code for ${senior.fullName}\n\n$qrData")
-                putExtra(Intent.EXTRA_SUBJECT, "Emergency QR Code - ${senior.fullName}")
-                type = "text/plain"
-            }
-            context.startActivity(Intent.createChooser(intent, "Share QR Code"))
-        } catch (e: Exception) {
-            // Share not available
-        }
+        pendingShareText = "DEMO DATA — FICTIONAL\n\nEmergency QR Code for ${senior.fullName}\n\n$qrData"
+        showSharePreview = true
     }
 
     Column(
@@ -198,6 +192,21 @@ fun QRCodeScreen() {
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
+
+    if (showSharePreview) SharePreviewDialog(
+        title = "Emergency QR Code",
+        previewText = pendingShareText,
+        onCancel = { showSharePreview = false },
+        onShare = {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                putExtra(Intent.EXTRA_TEXT, pendingShareText)
+                putExtra(Intent.EXTRA_SUBJECT, "Emergency QR Code - ${senior.fullName}")
+                type = "text/plain"
+            }
+            showSharePreview = false
+            context.startActivity(Intent.createChooser(intent, "Share QR Code"))
+        }
+    )
 }
 
 @Composable

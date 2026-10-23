@@ -24,6 +24,8 @@ fun RoutineScreen(viewModel: RoutineViewModel? = null, isCaregiverMode: Boolean 
     val morning by (viewModel?.morningTasks?.collectAsState() ?: remember { mutableStateOf(SampleData.routineTasks.filter { it.category == "Morning" }) })
     val afternoon by (viewModel?.afternoonTasks?.collectAsState() ?: remember { mutableStateOf(SampleData.routineTasks.filter { it.category == "Afternoon" }) })
     val evening by (viewModel?.eveningTasks?.collectAsState() ?: remember { mutableStateOf(SampleData.routineTasks.filter { it.category == "Evening" }) })
+    val allTasks by (viewModel?.allTasks?.collectAsState() ?: remember { mutableStateOf(SampleData.routineTasks) })
+    val activeCategory by (viewModel?.activeRoutineCategory?.collectAsState() ?: remember { mutableStateOf("") })
     val showDialog by (viewModel?.showDialog?.collectAsState() ?: remember { mutableStateOf(false) })
     val dialogTitle by (viewModel?.dialogTitle?.collectAsState() ?: remember { mutableStateOf("") })
     val dialogMessage by (viewModel?.dialogMessage?.collectAsState() ?: remember { mutableStateOf("") })
@@ -31,16 +33,22 @@ fun RoutineScreen(viewModel: RoutineViewModel? = null, isCaregiverMode: Boolean 
         item { Text("My Routine", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(vertical = 12.dp)) }
         item { Text(if (isCaregiverMode) "Review the routine, or open Care Setup to edit it." else "Tap a task when it is complete.", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp)) }
         if (isCaregiverMode) item { Button(onClick = { navController?.navigate(CareAppScreen.CareSetup.name) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Edit routines in Care Setup") } }
-        item { RoutineSection("Morning", morning, viewModel) }
-        item { RoutineSection("Afternoon", afternoon, viewModel) }
-        item { RoutineSection("Evening", evening, viewModel) }
+        val categories = allTasks.map { it.category }.distinct().ifEmpty { listOf("Morning", "Afternoon", "Evening") }
+        categories.forEach { category ->
+            item { RoutineSection(category, allTasks.filter { it.category == category }, viewModel, activeCategory == category) }
+        }
     }
     if (showDialog) AlertDialog(onDismissRequest = { viewModel?.dismissDialog() }, title = { Text(dialogTitle, fontWeight = FontWeight.Bold) }, text = { Text(dialogMessage, fontSize = 16.sp) }, confirmButton = { Button(onClick = { viewModel?.dismissDialog() }) { Text("OK") } })
 }
 
 @Composable
-private fun RoutineSection(category: String, tasks: List<RoutineTask>, viewModel: RoutineViewModel?) {
+private fun RoutineSection(category: String, tasks: List<RoutineTask>, viewModel: RoutineViewModel?, isActive: Boolean) {
     CareSectionCard(category) {
+    if (viewModel != null) {
+        Button(onClick = { if (isActive) viewModel.stopRoutine() else viewModel.startRoutine(category) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+            Text(if (isActive) "Stop this routine" else "Start this routine")
+        }
+    }
     tasks.forEach { task ->
         Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {

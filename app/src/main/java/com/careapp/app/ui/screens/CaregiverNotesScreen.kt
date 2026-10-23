@@ -14,6 +14,7 @@ import com.careapp.app.viewmodel.CaregiverNotesViewModel
 import com.careapp.app.util.PdfExportManager
 import com.careapp.app.util.CaregiverAuditStore
 import com.careapp.app.ui.components.CareSectionCard
+import com.careapp.app.ui.components.SharePreviewDialog
 
 @Composable
 fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
@@ -29,6 +30,8 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
     var breakfast by remember { mutableStateOf(false) }
     var lunch by remember { mutableStateOf(false) }
     var dinner by remember { mutableStateOf(false) }
+    var showSharePreview by remember { mutableStateOf(false) }
+    var pendingHandoff by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         viewModel?.refreshTodayNote()
         auditSummary = auditStore.handoffSummary()
@@ -95,8 +98,8 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
                 OutlinedButton(
                     onClick = {
                         val handoff = "Notes: $note\nMood: $mood\nSleep: $sleep\nSummary: $summary\n\nCaregiver audit trail:\n$auditSummary"
-                        val file = PdfExportManager.createTextPdf(context, "careapp-caregiver-handoff.pdf", "CareApp Caregiver Handoff", handoff)
-                        PdfExportManager.sharePdf(context, file, "Share Caregiver Handoff PDF")
+                        pendingHandoff = handoff
+                        showSharePreview = true
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("Export Handoff PDF") }
@@ -111,6 +114,16 @@ fun CaregiverNotesScreen(viewModel: CaregiverNotesViewModel? = null) {
         }
     }
     if (showDialog) AlertDialog(onDismissRequest = { viewModel?.dismissDialog() }, title = { Text("Saved") }, text = { Text(dialogMessage) }, confirmButton = { Button(onClick = { viewModel?.dismissDialog() }) { Text("OK") } })
+    if (showSharePreview) SharePreviewDialog(
+        title = "Caregiver Handoff PDF",
+        previewText = pendingHandoff,
+        onCancel = { showSharePreview = false },
+        onShare = {
+            val file = PdfExportManager.createTextPdf(context, "careapp-caregiver-handoff.pdf", "CareApp Caregiver Handoff", pendingHandoff)
+            showSharePreview = false
+            PdfExportManager.sharePdf(context, file, "Share Caregiver Handoff PDF")
+        }
+    )
 }
 
 @Composable

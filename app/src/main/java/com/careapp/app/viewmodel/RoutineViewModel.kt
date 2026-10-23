@@ -4,12 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.careapp.app.data.RoutineTask
 import com.careapp.app.data.repository.CareRepository
+import com.careapp.app.util.ActiveRoutineStore
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class RoutineViewModel(private val repository: CareRepository) : ViewModel() {
+class RoutineViewModel(application: Application, private val repository: CareRepository) : AndroidViewModel(application) {
+    private val activeRoutineStore = ActiveRoutineStore(application)
+    private val _activeRoutineCategory = MutableStateFlow(activeRoutineStore.activeCategory())
+    val activeRoutineCategory: StateFlow<String> = _activeRoutineCategory.asStateFlow()
 
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -25,6 +31,19 @@ class RoutineViewModel(private val repository: CareRepository) : ViewModel() {
     // Evening tasks
     val eveningTasks: StateFlow<List<RoutineTask>> = repository.getRoutineTasksByCategory("Evening")
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val allTasks: StateFlow<List<RoutineTask>> = repository.getAllRoutineTasks()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun startRoutine(category: String) {
+        activeRoutineStore.start(category)
+        _activeRoutineCategory.value = category
+    }
+
+    fun stopRoutine() {
+        activeRoutineStore.clear()
+        _activeRoutineCategory.value = ""
+    }
 
     // Dialog states
     private val _showDialog = MutableStateFlow(false)

@@ -3,14 +3,14 @@ package com.careapp.app.data
 // Sample data provider for demo
 object SampleData {
     val seniorProfile = SeniorProfile(
-        fullName = "Robert Lee",
+        fullName = "Robert Miller",
         preferredName = "Robert",
         birthday = "04/15/1945",
         address = "123 Example Street, San Diego, CA",
         primaryLanguage = "English",
         memoryNote = "You may have memory loss. Please speak slowly and tell me where I am.",
-        primaryCaregiverName = "Maya Lee",
-        primaryCaregiverPhone = "555-123-4567",
+        primaryCaregiverName = "Sarah Miller",
+        primaryCaregiverPhone = "555-010-0199",
         doctorName = "Dr. Patel",
         doctorPhone = "555-234-5678",
         preferredHospital = "San Diego Medical Center",

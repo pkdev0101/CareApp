@@ -15,6 +15,9 @@ interface RoutineDao {
     @Query("SELECT * FROM routine_tasks ORDER BY category ASC, suggestedTime ASC")
     suspend fun getAllRoutineTasks(): List<RoutineTask>
 
+    @Query("SELECT * FROM routine_tasks ORDER BY category ASC, suggestedTime ASC")
+    fun getAllRoutineTasksFlow(): Flow<List<RoutineTask>>
+
     @Update
     suspend fun updateRoutineTask(task: RoutineTask)
 

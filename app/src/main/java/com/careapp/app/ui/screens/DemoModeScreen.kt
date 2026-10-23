@@ -15,13 +15,21 @@ import androidx.navigation.NavController
 import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.theme.*
 import com.careapp.app.util.CaregiverPinStore
+import com.careapp.app.util.DemoModeController
+import com.careapp.app.data.repository.CareRepository
+import com.careapp.app.util.PatientProfileData
+import com.careapp.app.util.PatientProfileStore
+import com.careapp.app.util.EmergencyProfileData
+import com.careapp.app.util.EmergencyProfileStore
+import kotlinx.coroutines.launch
 
 private data class DemoStep(val title: String, val description: String, val route: CareAppScreen)
 
 @Composable
 fun DemoModeScreen(navController: NavController? = null) {
     val context = LocalContext.current
-    val pinStore = remember { CaregiverPinStore(context) }
+    val scope = rememberCoroutineScope()
+    val active = DemoModeController.isActive(context)
     val steps = listOf(
         DemoStep("Orientation Board", "See the senior's name, routine, and caregiver contact.", CareAppScreen.Home),
         DemoStep("Medication Safety", "Review the schedule and overdue-dose safeguards.", CareAppScreen.Medication),
@@ -45,10 +53,9 @@ fun DemoModeScreen(navController: NavController? = null) {
         item {
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Temporary Demo PINs", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text("Isolated demo data", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Text("These values are shown for demonstration only. Do not use this display in production.", color = MaterialTheme.colorScheme.error)
-                    Text("Supervisor PIN: ${pinStore.supervisorPin()}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Text("Caregiver PIN: ${pinStore.caregiverPin()}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Robert Miller / Sarah Miller / fictional records", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -61,8 +68,32 @@ fun DemoModeScreen(navController: NavController? = null) {
             }
         }
         item {
+            Button(
+                onClick = {
+                    scope.launch {
+                        if (active) {
+                            DemoModeController.exit(context)
+                        } else {
+                            DemoModeController.enter(context)
+                            CareRepository.getInstance(context).seedDemoIfNeeded()
+                            PatientProfileStore(context).save(PatientProfileData(name = "Robert", fullName = "Robert Miller", age = "", dateOfBirth = "", relationship = "Daughter", memoryNote = "I may need help remembering where I am.", communicationStyle = "Speak calmly and use short sentences."))
+                            EmergencyProfileStore(context).save(EmergencyProfileData(memoryNote = "My name is Robert. I may need help remembering where I am. Please help me contact my caregiver.", allergies = "Demo only — not medical advice", conditions = "Demo only", emergencyContact = "Sarah Miller", preferredHospital = "Demo safe place", calmingInstructions = "Speak calmly, use short sentences, and remind Robert of the next step."))
+                        }
+                        (context as? android.app.Activity)?.recreate()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text(if (active) "Exit Isolated Demo" else "Start Isolated Demo") }
+            Spacer(Modifier.height(8.dp))
             Button(onClick = { navController?.navigate(step.route.name) }, modifier = Modifier.fillMaxWidth()) { Text("Open Feature") }
             Spacer(Modifier.height(8.dp))
+            if (active) {
+                OutlinedButton(
+                    onClick = { navController?.navigate(CareAppScreen.DemoOnboarding.name) },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Replay Caregiver Setup") }
+                Spacer(Modifier.height(8.dp))
+            }
             Button(onClick = { if (current < steps.lastIndex) current++ else navController?.popBackStack() }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = SecondaryCoral)) { Text(if (current < steps.lastIndex) "Next" else "Finish Demo") }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = { navController?.popBackStack() }, modifier = Modifier.fillMaxWidth()) { Text("Skip Demo") }

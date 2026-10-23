@@ -18,10 +18,10 @@ class MedicationHistoryViewModelFactory(private val repository: CareRepository) 
     }
 }
 
-class RoutineViewModelFactory(private val repository: CareRepository) : ViewModelProvider.Factory {
+class RoutineViewModelFactory(private val context: Context, private val repository: CareRepository) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return RoutineViewModel(repository) as T
+        return RoutineViewModel(context.applicationContext as android.app.Application, repository) as T
     }
 }
 
@@ -53,9 +53,9 @@ class CaregiverNotesViewModelFactory(private val repository: CareRepository) : V
     }
 }
 
-class DashboardViewModelFactory(private val repository: CareRepository) : ViewModelProvider.Factory {
+class DashboardViewModelFactory(private val context: Context, private val repository: CareRepository) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T = DashboardViewModel(repository) as T
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = DashboardViewModel(context.applicationContext, repository) as T
 }
 
 class ThemeViewModelFactory(private val context: Context) : ViewModelProvider.Factory {

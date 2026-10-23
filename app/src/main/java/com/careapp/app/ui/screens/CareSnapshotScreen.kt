@@ -19,11 +19,15 @@ import androidx.navigation.NavController
 import com.careapp.app.data.SampleData
 import com.careapp.app.ui.theme.*
 import com.careapp.app.util.PdfExportManager
+import com.careapp.app.ui.components.SharePreviewDialog
 
 @Composable
 fun CareSnapshotScreen(navController: NavController? = null) {
     val context = LocalContext.current
     var showFullView by remember { mutableStateOf(false) }
+    var showSharePreview by remember { mutableStateOf(false) }
+    var pendingSnapshot by remember { mutableStateOf("") }
+    var pendingSnapshotIsPdf by remember { mutableStateOf(false) }
     val senior = SampleData.seniorProfile
     val medications = SampleData.medications
 
@@ -52,13 +56,9 @@ fun CareSnapshotScreen(navController: NavController? = null) {
                 Communication: Speak slowly and use simple words
             """.trimIndent()
 
-            val intent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, snapshot)
-                putExtra(Intent.EXTRA_SUBJECT, "Care Snapshot - ${senior.fullName}")
-                type = "text/plain"
-            }
-            context.startActivity(Intent.createChooser(intent, "Share Snapshot"))
+            pendingSnapshot = snapshot
+            pendingSnapshotIsPdf = false
+            showSharePreview = true
         } catch (e: Exception) {
             // Share not available
         }
@@ -170,9 +170,9 @@ fun CareSnapshotScreen(navController: NavController? = null) {
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedButton(
             onClick = {
-                val snapshotText = "${senior.fullName}\n${senior.memoryNote}\nCaregiver: ${senior.primaryCaregiverName} ${senior.primaryCaregiverPhone}\nAllergies: ${senior.allergies}\nConditions: ${senior.medicalConditions}\nMedications: ${medications.joinToString { it.name }}"
-                val file = PdfExportManager.createTextPdf(context, "careapp-care-snapshot.pdf", "CareApp Care Snapshot", snapshotText)
-                PdfExportManager.sharePdf(context, file, "Share Care Snapshot PDF")
+                pendingSnapshot = "${senior.fullName}\n${senior.memoryNote}\nCaregiver: ${senior.primaryCaregiverName} ${senior.primaryCaregiverPhone}\nAllergies: ${senior.allergies}\nConditions: ${senior.medicalConditions}\nMedications: ${medications.joinToString { it.name }}"
+                pendingSnapshotIsPdf = true
+                showSharePreview = true
             },
             modifier = Modifier.fillMaxWidth()
         ) { Text("Export as PDF") }
@@ -193,6 +193,27 @@ fun CareSnapshotScreen(navController: NavController? = null) {
 
         Spacer(modifier = Modifier.height(20.dp))
     }
+
+    if (showSharePreview) SharePreviewDialog(
+        title = "Care Snapshot",
+        previewText = pendingSnapshot,
+        onCancel = { showSharePreview = false },
+        onShare = {
+            if (pendingSnapshotIsPdf) {
+                val file = PdfExportManager.createTextPdf(context, "careapp-care-snapshot.pdf", "CareApp Care Snapshot", pendingSnapshot)
+                showSharePreview = false
+                PdfExportManager.sharePdf(context, file, "Share Care Snapshot PDF")
+            } else {
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    putExtra(Intent.EXTRA_TEXT, pendingSnapshot)
+                    putExtra(Intent.EXTRA_SUBJECT, "Care Snapshot - ${senior.fullName}")
+                    type = "text/plain"
+                }
+                showSharePreview = false
+                context.startActivity(Intent.createChooser(intent, "Share Snapshot"))
+            }
+        }
+    )
 }
 
 @Composable

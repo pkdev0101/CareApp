@@ -38,21 +38,21 @@ abstract class CareAppDatabase : RoomDatabase() {
     abstract fun savedPlaceDao(): SavedPlaceDao
 
     companion object {
-        @Volatile
-        private var INSTANCE: CareAppDatabase? = null
+        private val INSTANCES = mutableMapOf<String, CareAppDatabase>()
 
-        fun getDatabase(context: Context): CareAppDatabase {
-            return INSTANCE ?: synchronized(this) {
+        fun getDatabase(context: Context, databaseName: String = "careanchor_database"): CareAppDatabase {
+            return synchronized(this) {
+                INSTANCES[databaseName]?.let { return@synchronized it }
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     CareAppDatabase::class.java,
-                    "careanchor_database"
+                    databaseName
                 )
                     .addMigrations(MIGRATION_1_2)
                     .fallbackToDestructiveMigration()
                     .build()
 
-                INSTANCE = instance
+                INSTANCES[databaseName] = instance
                 instance
             }
         }

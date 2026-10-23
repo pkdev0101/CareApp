@@ -3,14 +3,19 @@ package com.careapp.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.careapp.app.data.Medication
+import com.careapp.app.data.RoutineTask
 import com.careapp.app.data.repository.CareRepository
+import com.careapp.app.util.ActiveRoutineStore
+import android.content.Context
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-class DashboardViewModel(private val repository: CareRepository) : ViewModel() {
+class DashboardViewModel(context: Context, private val repository: CareRepository) : ViewModel() {
+
+    private val activeRoutineStore = ActiveRoutineStore(context.applicationContext)
 
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val today = LocalDate.now().format(dateFormatter)
@@ -39,6 +44,9 @@ class DashboardViewModel(private val repository: CareRepository) : ViewModel() {
     // Next medication
     private val _nextMedication = MutableStateFlow<Medication?>(null)
     val nextMedication: StateFlow<Medication?> = _nextMedication.asStateFlow()
+
+    private val _nextRoutineTask = MutableStateFlow<RoutineTask?>(null)
+    val nextRoutineTask: StateFlow<RoutineTask?> = _nextRoutineTask.asStateFlow()
 
     // Status messages
     private val _statusMessage = MutableStateFlow("💊 Medications: 0 due")
@@ -92,9 +100,14 @@ class DashboardViewModel(private val repository: CareRepository) : ViewModel() {
 
         // Load routine tasks reactively
         viewModelScope.launch {
-            repository.getRoutineTasksByCategory("Morning").collect { tasks ->
+            repository.getAllRoutineTasks().collect { allTasks ->
+                val activeCategory = activeRoutineStore.activeCategory()
+                val activeTasks = allTasks.filter { it.category == activeCategory }
+                val tasks = activeTasks.takeIf { it.isNotEmpty() }
+                    ?: allTasks.filter { it.category == "Morning" }
                 _routineTaskCount.value = tasks.size
                 _routineTasksCompleted.value = tasks.count { it.completed }
+                _nextRoutineTask.value = tasks.firstOrNull { !it.completed }
                 updateStatusMessage()
             }
         }

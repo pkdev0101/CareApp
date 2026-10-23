@@ -27,6 +27,7 @@ import com.careapp.app.ui.components.CareSectionCard
 import com.careapp.app.ui.theme.*
 import com.careapp.app.util.DoctorSummaryBuilder
 import com.careapp.app.util.PdfExportManager
+import com.careapp.app.ui.components.SharePreviewDialog
 
 @Composable
 fun DoctorSummaryScreen(navController: NavController? = null) {
@@ -37,6 +38,9 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
     var medications by remember { mutableStateOf<List<Medication>>(emptyList()) }
     var medicationLogs by remember { mutableStateOf<List<MedicationLog>>(emptyList()) }
     var caregiverNotes by remember { mutableStateOf<List<CaregiverNote>>(emptyList()) }
+    var showSharePreview by remember { mutableStateOf(false) }
+    var pendingShareText by remember { mutableStateOf("") }
+    var pendingShareIsPdf by remember { mutableStateOf(false) }
 
     var reportText by remember {
         mutableStateOf(
@@ -73,18 +77,31 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
     }
 
     fun shareReport() {
-        try {
-            val intent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, reportText)
-                putExtra(Intent.EXTRA_SUBJECT, "Weekly Care Report - ${senior.fullName}")
-                type = "text/plain"
-            }
-            context.startActivity(Intent.createChooser(intent, "Share Report"))
-        } catch (e: Exception) {
-            // Share not available
-        }
+        pendingShareText = reportText
+        pendingShareIsPdf = false
+        showSharePreview = true
     }
+
+    if (showSharePreview) SharePreviewDialog(
+        title = "Weekly Care Report",
+        previewText = pendingShareText,
+        onCancel = { showSharePreview = false },
+        onShare = {
+            if (pendingShareIsPdf) {
+                val file = PdfExportManager.createTextPdf(context, "careapp-doctor-summary.pdf", "CareApp Doctor Summary", pendingShareText)
+                showSharePreview = false
+                PdfExportManager.sharePdf(context, file, "Share Doctor Summary PDF")
+            } else {
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    putExtra(Intent.EXTRA_TEXT, pendingShareText)
+                    putExtra(Intent.EXTRA_SUBJECT, "Weekly Care Report - ${senior.fullName}")
+                    type = "text/plain"
+                }
+                showSharePreview = false
+                context.startActivity(Intent.createChooser(intent, "Share Report"))
+            }
+        }
+    )
 
     Column(
         modifier = Modifier
@@ -184,8 +201,9 @@ fun DoctorSummaryScreen(navController: NavController? = null) {
 
             OutlinedButton(
                 onClick = {
-                    val file = PdfExportManager.createTextPdf(context, "careapp-doctor-summary.pdf", "CareApp Doctor Summary", reportText)
-                    PdfExportManager.sharePdf(context, file, "Share Doctor Summary PDF")
+                    pendingShareText = reportText
+                    pendingShareIsPdf = true
+                    showSharePreview = true
                 },
                 modifier = Modifier.fillMaxWidth()
             ) { Text("Export PDF") }

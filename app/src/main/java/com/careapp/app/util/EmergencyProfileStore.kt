@@ -12,7 +12,7 @@ data class EmergencyProfileData(
 )
 
 class EmergencyProfileStore(context: Context) {
-    private val prefs = context.getSharedPreferences("emergency_profile", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences(if (DemoModeController.isActive(context)) "careapp_demo_emergency_profile" else "emergency_profile", Context.MODE_PRIVATE)
 
     fun load() = EmergencyProfileData(
         prefs.getString("memory_note", "You may have memory loss. Please speak slowly and tell me where I am.") ?: "",
@@ -31,4 +31,8 @@ class EmergencyProfileStore(context: Context) {
         .putString("preferred_hospital", data.preferredHospital)
         .putString("calming_instructions", data.calmingInstructions)
         .apply()
+
+    fun hasProfile(): Boolean = listOf(
+        "memory_note", "allergies", "conditions", "emergency_contact", "preferred_hospital", "calming_instructions"
+    ).any { prefs.getString(it, "").orEmpty().isNotBlank() }
 }

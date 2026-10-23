@@ -3,10 +3,12 @@ package com.careapp.app.ui.screens
 import android.content.Intent
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -25,21 +27,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.careapp.app.data.SampleData
+import com.careapp.app.data.Medication
+import com.careapp.app.data.RoutineTask
+import com.careapp.app.data.MemoryCard
+import com.careapp.app.data.repository.CareRepository
 import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.components.CareSectionCard
 import com.careapp.app.viewmodel.MemoryCardViewModel
 import com.careapp.app.ui.components.LargeButton
 import com.careapp.app.ui.theme.*
+import com.careapp.app.util.PatientProfileStore
+import com.careapp.app.util.ActiveRoutineStore
+import com.careapp.app.util.ContextEngine
+import java.time.LocalDate
 
 @Composable
 fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardViewModel? = null) {
-    val senior = SampleData.seniorProfile
     val context = LocalContext.current
     var showBreathingTimer by remember { mutableStateOf(false) }
     var breathPhase by remember { mutableStateOf("inhale") }
-    val nextMedication = SampleData.medications.firstOrNull()
-    val nextTask = "Take morning medicine"
+    val repository = remember { CareRepository.getInstance(context) }
+    var medications by remember { mutableStateOf(emptyList<Medication>()) }
+    var routineTasks by remember { mutableStateOf(emptyList<RoutineTask>()) }
+    var medicationLogs by remember { mutableStateOf(emptyList<com.careapp.app.data.MedicationLog>()) }
+    val memoryCards by (viewModel?.memoryCards?.collectAsState() ?: remember { mutableStateOf(emptyList<MemoryCard>()) })
+    val profile = remember { PatientProfileStore(context).load() }
+    LaunchedEffect(Unit) {
+        medications = repository.getAllMedicationsSync()
+        routineTasks = repository.getAllRoutineTasksSync()
+        medicationLogs = repository.getMedicationLogsForDate(LocalDate.now().toString())
+    }
+    val nextMedication = medications.firstOrNull()
+    val activeCategory = remember { ActiveRoutineStore(context).activeCategory() }
+    val nextRoutine = ContextEngine.nextRoutineTask(routineTasks, activeCategory)
+    val routineProgressSummary = ContextEngine.routineProgressSummary(routineTasks, activeCategory)
+    val nextTask = nextRoutine?.title ?: nextMedication?.let { "take ${it.name}" } ?: "ask your caregiver to add a next step"
+    val nextMedicationAnswer = ContextEngine.medicationAnswer(medications, medicationLogs)
 
     val scale = remember { Animatable(1f) }
     LaunchedEffect(showBreathingTimer) {
@@ -117,14 +140,15 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
         item {
             ContextRecoveryCard(
                 title = "What was I doing?",
-                answer = "You were getting ready for your day. Your next step is: ${nextTask.lowercase()}."
+                answer = routineProgressSummary,
+                highlightedNextStep = nextRoutine?.title
             )
         }
 
         item {
             ContextRecoveryCard(
                 title = "What do I do next?",
-                answer = "Next: $nextTask. Take your time and ask your caregiver if you are unsure.",
+                answer = if (nextRoutine != null) "Next: ${nextRoutine.title}. Take your time and ask your caregiver if you are unsure." else "There is no active routine step yet. Start a routine before asking what to do next.",
                 actionLabel = "Open Medicine",
                 onAction = { navController?.navigate(CareAppScreen.Medication.name) }
             )
@@ -133,7 +157,7 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
         item {
             ContextRecoveryCard(
                 title = "Did I take my medicine?",
-                answer = "Your next medicine is ${nextMedication?.name ?: "not listed"} at ${nextMedication?.scheduledTime ?: "a scheduled time"}. It has not been confirmed as taken here. Please ask your caregiver before taking medicine if you are unsure.",
+                answer = nextMedicationAnswer,
                 actionLabel = "Open Medicine",
                 onAction = { navController?.navigate(CareAppScreen.Medication.name) }
             )
@@ -142,7 +166,7 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
         item {
             ContextRecoveryCard(
                 title = "Where am I?",
-                answer = "You are at home. You are safe. This is local demo information.",
+                answer = "Your caregiver has not added a current location here. Open Help for location and safety options.",
                 actionLabel = "Open Help",
                 onAction = { navController?.navigate(CareAppScreen.Help.name) }
             )
@@ -151,12 +175,12 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
         item {
             ContextRecoveryCard(
                 title = "Who can I call?",
-                answer = "You can call ${senior.primaryCaregiverName}, your caregiver.",
+                answer = ContextEngine.contactAnswer(memoryCards),
                 actionLabel = "Call Caregiver",
                 onAction = {
                     runCatching {
                         val intent = Intent(Intent.ACTION_DIAL).apply {
-                            data = android.net.Uri.parse("tel:${senior.primaryCaregiverPhone}")
+                            data = android.net.Uri.parse("tel:${memoryCards.firstOrNull()?.phone.orEmpty()}")
                         }
                         context.startActivity(intent)
                     }
@@ -204,7 +228,7 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Text("You are safe.", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text("Take your time. ${senior.memoryNote}", fontSize = 17.sp, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Take your time. ${profile.memoryNote.ifBlank { "Your caregiver can add calming instructions in Care Setup." }}", fontSize = 17.sp, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -274,7 +298,7 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
         item {
             CommonQuestionCard(
                 "Where am I?",
-                "You are at ${senior.address}.\nNearest cross street: Example Street & Main Avenue (demo location).\nYou are safe."
+                "Your caregiver has not added a home address here. Open Lost Mode for available location and safety information."
             )
         }
 
@@ -283,15 +307,15 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
         }
 
         item {
-            CommonQuestionCard("Who is visiting today?", "${senior.primaryCaregiverName} may visit today. Take your time and you can call your caregiver.")
+            CommonQuestionCard("Who is visiting today?", "Your caregiver has not added a visit yet. Take your time and ask Caregiver Mode for help.")
         }
 
         item {
-            CommonQuestionCard("What should I do next?", "Your next routine step is to drink water and take your time.")
+            CommonQuestionCard("What should I do next?", if (nextRoutine != null) "Your next routine step is ${nextRoutine.title}." else "There is no active routine step saved yet.")
         }
 
         item {
-            CommonQuestionCard("Who can I call?", "You can call ${senior.primaryCaregiverName} at ${senior.primaryCaregiverPhone}.")
+            CommonQuestionCard("Who can I call?", if (memoryCards.isNotEmpty()) "You can call ${memoryCards.first().name} at ${memoryCards.first().phone}." else "Your caregiver has not added a contact yet.")
         }
 
         item { WhatHelpsTracker() }
@@ -315,7 +339,7 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
                 onClick = {
                     try {
                         val intent = Intent(Intent.ACTION_DIAL).apply {
-                            data = android.net.Uri.parse("tel:${senior.primaryCaregiverPhone}")
+                            data = android.net.Uri.parse("tel:${memoryCards.firstOrNull()?.phone.orEmpty()}")
                         }
                         context.startActivity(intent)
                     } catch (e: Exception) {}
@@ -348,10 +372,21 @@ fun CalmModeScreen(navController: NavController? = null, viewModel: MemoryCardVi
 private fun ContextRecoveryCard(
     title: String,
     answer: String,
+    highlightedNextStep: String? = null,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var highlightNextStep by remember { mutableStateOf(false) }
+    LaunchedEffect(expanded) {
+        if (expanded && highlightedNextStep != null) {
+            highlightNextStep = true
+            delay(1800)
+            highlightNextStep = false
+        } else {
+            highlightNextStep = false
+        }
+    }
 
     Card(
         modifier = Modifier
@@ -366,6 +401,22 @@ private fun ContextRecoveryCard(
             Spacer(modifier = Modifier.height(4.dp))
             if (expanded) {
                 Text(answer, fontSize = 17.sp, color = MaterialTheme.colorScheme.onSurface)
+                highlightedNextStep?.let { step ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(
+                            if (highlightNextStep) 3.dp else 1.dp,
+                            if (highlightNextStep) SupportPlum else PrimaryTeal.copy(alpha = 0.45f)
+                        ),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                            Text("Next step", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = PrimaryTeal)
+                            Text(step, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
                 actionLabel?.let { label ->
                     Button(
                         onClick = { onAction?.invoke() },

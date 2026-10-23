@@ -18,23 +18,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.careapp.app.data.SampleData
 import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.components.LargeButton
 import com.careapp.app.ui.components.AdherenceWidget
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.DashboardViewModel
+import com.careapp.app.viewmodel.MemoryCardViewModel
 import com.careapp.app.util.PatientProfileStore
+import com.careapp.app.util.DemoModeController
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.TextStyle
 import java.util.*
 
 @Composable
-fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewModel? = null) {
-    val senior = SampleData.seniorProfile
+fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewModel? = null, memoryViewModel: MemoryCardViewModel? = null) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val patientProfile = remember { PatientProfileStore(context).load() }
+    var patientProfile by remember { mutableStateOf(PatientProfileStore(context).load()) }
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                patientProfile = PatientProfileStore(context).load()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     val today = LocalDate.now()
     val greeting = when (LocalTime.now().hour) {
         in 5..11 -> "Good morning"
@@ -45,9 +55,15 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
     val dayName = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
     val monthDay = "${today.monthValue.toString().padStart(2, '0')}/${today.dayOfMonth.toString().padStart(2, '0')}/${today.year}"
 
-    val nextMedication = SampleData.medications.firstOrNull()
-    val nextVisitor = "Maya at 5:00 PM"
-    val nextTask = "Take morning medicine"
+    val nextMedication by (viewModel?.nextMedication?.collectAsState() ?: remember { mutableStateOf(null) })
+    val nextRoutineTask by (viewModel?.nextRoutineTask?.collectAsState() ?: remember { mutableStateOf(null) })
+    val memoryCards by (memoryViewModel?.memoryCards?.collectAsState() ?: remember { mutableStateOf(emptyList()) })
+    val nextVisitor = if (DemoModeController.isActive(context)) {
+        "Sarah Miller at 5:00 PM"
+    } else {
+        "Ask your caregiver to add a visit"
+    }
+    val nextTask = nextRoutineTask?.title ?: nextMedication?.let { "Take ${it.name}" } ?: "Ask your caregiver to add a next step"
     val medicationCount by (viewModel?.medicationCount?.collectAsState() ?: remember { mutableStateOf(3) })
     val medicationsTaken by (viewModel?.medicationsTaken?.collectAsState() ?: remember { mutableStateOf(0) })
     val adherence by (viewModel?.adherencePercentage?.collectAsState() ?: remember { mutableStateOf(0) })
@@ -64,7 +80,7 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
         // Welcome
         item {
             Text(
-                text = "$greeting, ${patientProfile.name}.",
+                text = "$greeting, ${patientProfile.name.ifBlank { "there" }}.",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryTeal,
@@ -105,7 +121,8 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Due at ${nextMedication?.scheduledTime ?: "today"}",
+                        text = nextRoutineTask?.let { "Current routine · ${it.category}" }
+                            ?: "Next medication · ${nextMedication?.scheduledTime ?: "today"}",
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)
@@ -139,7 +156,7 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
                     Spacer(modifier = Modifier.height(12.dp))
                     OrientationInfoRow("Next visitor", nextVisitor)
                     Spacer(modifier = Modifier.height(12.dp))
-                    OrientationInfoRow("Emergency contact", senior.primaryCaregiverName)
+                    OrientationInfoRow("Emergency contact", memoryCards.firstOrNull()?.name ?: "Not configured")
                 }
             }
         }
@@ -182,7 +199,7 @@ fun HomeScreen(navController: NavController? = null, viewModel: DashboardViewMod
         item {
             LargeButton(
                 text = "Call Caregiver",
-                onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:${senior.primaryCaregiverPhone}"))) } },
+                onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:${memoryCards.firstOrNull()?.phone.orEmpty()}"))) } },
                 backgroundColor = SupportPlumLight
             )
         }

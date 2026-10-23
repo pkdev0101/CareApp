@@ -25,6 +25,7 @@ import com.careapp.app.util.CaregiverAuditStore
 import com.careapp.app.util.MedicationReminderPreferences
 import com.careapp.app.util.PatientProfileData
 import com.careapp.app.util.PatientProfileStore
+import com.careapp.app.util.EmergencyProfileStore
 import kotlinx.coroutines.launch
 
 @Composable
@@ -48,6 +49,7 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
     var timeMenuExpanded by remember { mutableStateOf(false) }
     var validationMessage by remember { mutableStateOf("") }
     var savedMessage by remember { mutableStateOf("") }
+    var setupCounts by remember { mutableStateOf(emptyMap<String, Int>()) }
     val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         savedMessage = if (granted) "Medication reminders enabled." else "Notifications were not enabled. You can allow them in Android Settings."
     }
@@ -65,8 +67,21 @@ fun CareSetupScreen(repository: CareRepository, navController: NavController? = 
         validationMessage = ""
     }
 
+    LaunchedEffect(savedMessage, showPatientProfileDialog, dialog) {
+        val profile = patientProfileStore.load()
+        setupCounts = mapOf(
+            "Senior profile" to if (profile.name.isNotBlank() || profile.fullName.isNotBlank()) 1 else 0,
+            "Trusted contacts" to repository.getAllMemoryCardsSync().size,
+            "Medication information" to repository.getAllMedicationsSync().size,
+            "Daily routines" to repository.getAllRoutineTasksSync().size,
+            "Emergency information" to if (EmergencyProfileStore(context).hasProfile()) 1 else 0,
+            "Saved safe place" to repository.getAllPlacesSync().size
+        )
+    }
+
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 16.dp), contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp)) {
         item { Text("Care Setup", style = MaterialTheme.typography.headlineMedium); Text("Caregivers enter the information Senior Mode uses.", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 12.dp)) }
+        item { SetupCompletenessCard(setupCounts) }
         item {
             val profile = patientProfileStore.load()
             SetupCard("Patient Profile", "Name, age, and date of birth used throughout Senior Mode") {
@@ -230,6 +245,23 @@ private fun SetupCard(title: String, description: String, onClick: () -> Unit) {
             Text(title, style = MaterialTheme.typography.titleLarge)
             Text(description, style = MaterialTheme.typography.bodyMedium)
             Text("Open", color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 6.dp))
+        }
+    }
+}
+
+@Composable
+private fun SetupCompletenessCard(counts: Map<String, Int>) {
+    val complete = counts.values.count { it > 0 }
+    val total = 6
+    Card(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Setup completeness", style = MaterialTheme.typography.titleLarge)
+            Text("$complete of $total areas configured", style = MaterialTheme.typography.bodyLarge)
+            LinearProgressIndicator(progress = { complete.toFloat() / total.toFloat() }, modifier = Modifier.fillMaxWidth())
+            counts.forEach { (label, count) ->
+                Text("${if (count > 0) "✓" else "—"} $label: ${if (count > 0) "Complete" else "Not configured"}", style = MaterialTheme.typography.bodyMedium)
+            }
+            Text("Each section below opens the same records used by Senior Mode.", style = MaterialTheme.typography.bodySmall)
         }
     }
 }

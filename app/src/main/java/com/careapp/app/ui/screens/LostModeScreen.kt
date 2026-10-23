@@ -17,6 +17,7 @@ import com.careapp.app.data.SampleData
 import com.careapp.app.data.repository.CareRepository
 import com.careapp.app.ui.CareAppScreen
 import com.careapp.app.ui.components.LargeButton
+import com.careapp.app.ui.components.SharePreviewDialog
 import com.careapp.app.ui.theme.*
 import com.careapp.app.viewmodel.LocationViewModel
 
@@ -37,13 +38,15 @@ fun LostModeScreen(viewModel: LocationViewModel? = null, navController: NavContr
         ?: people.firstOrNull()
     val caregiverName = caregiver?.name ?: senior.primaryCaregiverName
     val caregiverPhone = caregiver?.phone ?: senior.primaryCaregiverPhone
+    var pendingShareText by remember { mutableStateOf("") }
+    var showSharePreview by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel?.getCurrentLocation() }
 
     fun shareLocation() {
         viewModel?.getCurrentLocation { refreshedText ->
-            val intent = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, refreshedText) }
-            context.startActivity(Intent.createChooser(intent, "Share My Location"))
+            pendingShareText = refreshedText
+            showSharePreview = true
         }
     }
 
@@ -96,5 +99,19 @@ fun LostModeScreen(viewModel: LocationViewModel? = null, navController: NavContr
         title = { Text(dialogTitle) },
         text = { Text(dialogMessage) },
         confirmButton = { Button(onClick = { viewModel?.dismissDialog() }) { Text("OK") } }
+    )
+
+    if (showSharePreview) SharePreviewDialog(
+        title = "Share My Location",
+        previewText = pendingShareText,
+        onCancel = { showSharePreview = false },
+        onShare = {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, pendingShareText)
+            }
+            showSharePreview = false
+            context.startActivity(Intent.createChooser(intent, "Share My Location"))
+        }
     )
 }

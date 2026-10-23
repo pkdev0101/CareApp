@@ -27,6 +27,7 @@ import androidx.compose.runtime.*
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,6 +61,10 @@ import com.careapp.app.util.CaregiverPinStore
 import com.careapp.app.util.CaregiverAuditStore
 import com.careapp.app.util.MedicationReminderPreferences
 import com.careapp.app.util.NotificationHelper
+import com.careapp.app.util.OnboardingStore
+import com.careapp.app.util.PatientProfileStore
+import com.careapp.app.util.EmergencyProfileStore
+import com.careapp.app.util.DemoModeController
 
 enum class CareAppScreen {
     Home,
@@ -77,7 +82,8 @@ enum class CareAppScreen {
     Settings,
     DoctorSummary,
     QRCode,
-    DemoMode
+    DemoMode,
+    DemoOnboarding
     ,CareSetup, ManageMedications, ManagePeople, ManageRoutines, ManagePlaces, EmergencyProfile
 }
 
@@ -96,6 +102,7 @@ private fun getTopBarTitle(route: String?, isCaregiverMode: Boolean): String? = 
     CareAppScreen.MedicationHistory.name -> "Medication History"
     CareAppScreen.CareSnapshot.name -> "Care Snapshot"
     CareAppScreen.DemoMode.name -> "Judge Demo"
+    CareAppScreen.DemoOnboarding.name -> "Caregiver Setup"
     CareAppScreen.CareSetup.name -> "Care Setup"
     CareAppScreen.ManageMedications.name -> "Manage Medications"
     CareAppScreen.ManagePeople.name -> "Manage People"
@@ -126,6 +133,61 @@ private fun getTopBarIcon(route: String?): ImageVector = when (route) {
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun CareAppRoot() {
+    val context = LocalContext.current
+    val demoMode = DemoModeController.isActive(context)
+    val repository = remember(demoMode) { CareRepository.getInstance(context) }
+    val onboardingStore = remember { OnboardingStore(context) }
+    val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory(context))
+    val themeMode by themeViewModel.themeMode.collectAsState()
+    val accessibilityViewModel: AccessibilityViewModel = viewModel(factory = AccessibilityViewModelFactory(context))
+    val textSizeScale by accessibilityViewModel.textSizeScale.collectAsState()
+    var launchScreen by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        if (DemoModeController.isActive(context)) {
+            launchScreen = "main"
+        } else if (onboardingStore.isCompleted()) {
+            launchScreen = "main"
+        } else if (repository.hasAnyUserData() ||
+            PatientProfileStore(context).load().name.isNotBlank() ||
+            EmergencyProfileStore(context).hasProfile()
+        ) {
+            // Existing installs are never replaced with onboarding/demo records.
+            onboardingStore.markCompleted()
+            launchScreen = "main"
+        } else {
+            launchScreen = "welcome"
+        }
+    }
+
+    CareAppTheme(
+        darkTheme = when (themeMode) {
+            ThemeViewModel.AppThemeMode.DARK -> true
+            ThemeViewModel.AppThemeMode.LIGHT -> false
+            ThemeViewModel.AppThemeMode.SYSTEM -> isSystemInDarkTheme()
+        },
+        textScale = textSizeScale
+    ) {
+        when (launchScreen) {
+            "welcome" -> WelcomeScreen(
+                hasSavedProgress = onboardingStore.hasSavedProgress(),
+                onSetup = { onboardingStore.markStarted(); launchScreen = "onboarding" }
+            )
+            "onboarding" -> OnboardingScreen(
+                repository = repository,
+                onboardingStore = onboardingStore,
+                initialStep = onboardingStore.currentStep(),
+                onFinished = { launchScreen = "main" },
+                onSaveAndExit = { launchScreen = "welcome" }
+            )
+            "main" -> MainCareApp(demoMode = demoMode)
+        }
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun MainCareApp(demoMode: Boolean = false) {
     val context = LocalContext.current
     val modeViewModel: CareModeViewModel = viewModel(factory = CareModeViewModelFactory(context))
     val careMode by modeViewModel.mode.collectAsState()
@@ -159,19 +221,23 @@ fun CareAppRoot() {
         val navController = rememberNavController()
         val repository = CareRepository.getInstance(context)
         val reminderPreferences = remember { MedicationReminderPreferences(context) }
-        LaunchedEffect(repository) {
-            repository.seedIfNeeded()
+        LaunchedEffect(repository, demoMode) {
+            if (demoMode) {
+                themeViewModel.setThemeMode(ThemeViewModel.AppThemeMode.LIGHT)
+                repository.seedDemoIfNeeded()
+            }
             repository.getAllMedicationsSync().forEach {
                 if (reminderPreferences.isGloballyEnabled()) NotificationHelper.scheduleMedicationReminder(context, it)
             }
         }
-        val medViewModel: MedicationViewModel = viewModel(factory = MedicationViewModelFactory(repository))
-        val routineViewModel: RoutineViewModel = viewModel(factory = RoutineViewModelFactory(repository))
-        val emergencyViewModel: EmergencyViewModel = viewModel(factory = EmergencyViewModelFactory(repository))
-        val locationViewModel: LocationViewModel = viewModel(factory = LocationViewModelFactory(repository))
-        val memoryViewModel: MemoryCardViewModel = viewModel(factory = MemoryCardViewModelFactory(repository))
-        val caregiverViewModel: CaregiverNotesViewModel = viewModel(factory = CaregiverNotesViewModelFactory(repository))
-        val dashboardViewModel: DashboardViewModel = viewModel(factory = DashboardViewModelFactory(repository))
+    val modeKey = if (demoMode) "demo" else "real"
+    val medViewModel: MedicationViewModel = viewModel(key = "medication_$modeKey", factory = MedicationViewModelFactory(repository))
+    val routineViewModel: RoutineViewModel = viewModel(key = "routine_$modeKey", factory = RoutineViewModelFactory(context, repository))
+    val emergencyViewModel: EmergencyViewModel = viewModel(key = "emergency_$modeKey", factory = EmergencyViewModelFactory(repository))
+    val locationViewModel: LocationViewModel = viewModel(key = "location_$modeKey", factory = LocationViewModelFactory(repository))
+    val memoryViewModel: MemoryCardViewModel = viewModel(key = "memory_$modeKey", factory = MemoryCardViewModelFactory(repository))
+    val caregiverViewModel: CaregiverNotesViewModel = viewModel(key = "notes_$modeKey", factory = CaregiverNotesViewModelFactory(repository))
+    val dashboardViewModel: DashboardViewModel = viewModel(key = "dashboard_$modeKey", factory = DashboardViewModelFactory(context, repository))
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         val detailRoute = currentRoute in setOf(
@@ -281,7 +347,7 @@ fun CareAppRoot() {
                     .background(MaterialTheme.colorScheme.background)
             ) {
                 composable(CareAppScreen.Home.name) {
-                    HomeScreen(navController, dashboardViewModel)
+                    HomeScreen(navController, dashboardViewModel, memoryViewModel)
                 }
                 composable(CareAppScreen.Medication.name) {
                     MedicationScreen(viewModel = medViewModel, navController = navController, isCaregiverMode = isCaregiverMode)
@@ -327,6 +393,15 @@ fun CareAppRoot() {
                 }
                 composable(CareAppScreen.DemoMode.name) {
                     DemoModeScreen(navController)
+                }
+                composable(CareAppScreen.DemoOnboarding.name) {
+                    OnboardingScreen(
+                        repository = repository,
+                        onboardingStore = OnboardingStore(context),
+                        initialStep = 0,
+                        onFinished = { navController.navigate(CareAppScreen.Home.name) { popUpTo(CareAppScreen.DemoMode.name) } },
+                        onSaveAndExit = { navController.popBackStack() }
+                    )
                 }
                 composable(CareAppScreen.CareSetup.name) {
                     CareSetupScreen(repository = repository, navController = navController)
