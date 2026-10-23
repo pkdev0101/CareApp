@@ -37,8 +37,7 @@ adb shell am start -n com.careapp.app/.MainActivity
 ```
 
 ## Tech Stack
-- **UI:** Jetpack Compose + Material Design 3
-- **Architecture:** MVVM with Repository pattern
+- **UI:** Jetpack Compose
 - **Database:** Room with SQLite
 - **State Management:** Kotlin Flow + StateFlow
 - **Notifications:** WorkManager for scheduled reminders
